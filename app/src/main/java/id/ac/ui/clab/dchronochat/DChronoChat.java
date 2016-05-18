@@ -1,5 +1,6 @@
 package id.ac.ui.clab.dchronochat;
 
+import id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -15,8 +16,6 @@ import net.named_data.jndn.security.KeyChain;
 import net.named_data.jndn.security.SecurityException;
 import net.named_data.jndn.sync.ChronoSync2013;
 import net.named_data.jndn.util.Blob;
-
-import id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,7 +33,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
     private final String screenName; //the screen name of the user
     private final String userName;
-    private final String hubPrefix; //the prefix of the hub
+    //private final String hubPrefix; //the prefix of the hub
     private final Name chatPrefix;
     private final String chatRoom; //chatroom name
     private int maxMsgCacheLength;
@@ -51,13 +50,11 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     private final int maxMessageCacheLength = 100;
     private boolean isRecoverySyncState = true;
 
-    public DChronoChat(String screenName, String userName, String chatRoom,
-                       String hubPrefix, Face face, KeyChain keyChain, Name certificateName)
+    public DChronoChat(String screenName, String chatRoom, Name hubPrefix,
+                       Face face, KeyChain keyChain, Name certificateName)
     {
         this.screenName = screenName;
-        this.userName = userName;
         this.chatRoom = chatRoom;
-        this.hubPrefix = hubPrefix;
         this.face = face;
         this.keyChain = keyChain;
         this.certificateName = certificateName;
@@ -70,7 +67,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         try {
             sync = new ChronoSync2013
                     (this, this, chatPrefix,
-                            new Name("/ndn/broadcast/ChronoChat-0.3").append(chatRoom), session,
+                            new Name("/ndn/broadcast/ChronoChat").append(chatRoom), session,
                             face, keyChain, certificateName, syncLifetime, RegisterFailed.onRegisterFailed);
         } catch (IOException | SecurityException ex) {
             Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
@@ -410,11 +407,5 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
 
     }
-
-
-
-
-
-
 
 }
