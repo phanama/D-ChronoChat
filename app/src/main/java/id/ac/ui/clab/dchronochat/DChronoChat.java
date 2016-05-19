@@ -43,6 +43,8 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     private final double syncLifetime = 5000.0; // milliseconds
     private ChronoSync2013 sync;
     private final OnTimeout heartbeat;
+    private final boolean requireVerification;
+    private Name identityName;
 
     // Use a non-template ArrayList so it works with older Java compilers.
     private ArrayList messageCache = new ArrayList(); // of CachedMessage
@@ -50,20 +52,25 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     private final int maxMessageCacheLength = 100;
     private boolean isRecoverySyncState = true;
 
-    public DChronoChat(String screenName, String chatRoom, Name hubPrefix,
-                       Face face, KeyChain keyChain, Name certificateName)
+
+    public DChronoChat(String screenName, String userName, String chatRoom, Name hubPrefix,
+                       Face face, KeyChain keyChain, Name certificateName, boolean requireVerification)
     {
-        this.screenName = screenName;
-        this.chatRoom = chatRoom;
+        this.screenName = screenName; //The name on screen
+        this.chatRoom = chatRoom; //chatroom name
         this.face = face;
         this.keyChain = keyChain;
         this.certificateName = certificateName;
         heartbeat = new Heartbeat();
+        this.requireVerification = requireVerification;
+        this.userName = userName; //the email
 
         // This should only be called once, so get the random string here.
-        chatPrefix = new Name(hubPrefix).append(chatRoom).append(getRandomString());
+
         int session = (int)Math.round(getNowMilliseconds() / 1000.0);
-        userName = screenName + session;
+        identityName = new Name(hubPrefix).append("aa"); //identity to append to chatprefix
+        chatPrefix = new Name(identityName).append(chatRoom).append(String.valueOf(session)); //the prefix of this chat
+
         try {
             sync = new ChronoSync2013
                     (this, this, chatPrefix,
@@ -79,6 +86,8 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         } catch (IOException | SecurityException ex) {
             Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+        // TODO : Add persistent storage for chats
     }
 
     // Send a chat message.
@@ -150,7 +159,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     {
         // Set the heartbeat timeout using the Interest timeout mechanism. The
         // heartbeat() function will call itself again after a timeout.
-        // TODO: Are we sure using a "/local/timeout" interest is the best future call approach?
+        // TODO: Using a "/local/timeout" interest ,is this the best approach?
         Interest timeout = new Interest(new Name("/local/timeout"));
         timeout.setInterestLifetimeMilliseconds(60000);
         try {
@@ -309,7 +318,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             }
 
             // Set the alive timeout using the Interest timeout mechanism.
-            // TODO: Are we sure using a "/local/timeout" interest is the best future call approach?
+            // TODO: Using a "/local/timeout" interest ,is this the best approach?
             Interest timeout = new Interest(new Name("/local/timeout"));
             timeout.setInterestLifetimeMilliseconds(120000);
             try {
@@ -322,11 +331,11 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             }
 
             // isRecoverySyncState_ was set by sendInterest.
-            // TODO: If isRecoverySyncState_ changed, this assumes that we won't get
-            //   data from an interest sent before it changed.
+            // TODO: If isRecoverySyncState_ changed, this assumes that we won't get data from an interest sent before it changed.
             if (content.getType().equals(ChatMessage.ChatMessageType.CHAT) &&
-                    !isRecoverySyncState && !content.getFrom().equals(screenName))
+                    !isRecoverySyncState && !content.getFrom().equals(screenName)) {
                 System.out.println(content.getFrom() + ": " + content.getData());
+            }
             else if (content.getType().equals(ChatMessage.ChatMessageType.LEAVE)) {
                 // leave message
                 int n = roster.indexOf(nameAndSession);

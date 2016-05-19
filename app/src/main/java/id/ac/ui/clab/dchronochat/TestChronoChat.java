@@ -148,9 +148,12 @@ public class TestChronoChat {
     main(String[] args)
     {
         try {
-            System.out.println("Enter your chat username:");
+            System.out.println("Enter your chat screen name:");
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             String screenName = reader.readLine();
+
+            System.out.println("Enter your email:");
+            String userName = reader.readLine();
 
             String defaultHubPrefix = "ndn/edu/ucla/remap";
             System.out.println("Enter your hub prefix [" + defaultHubPrefix + "]:");
@@ -186,8 +189,9 @@ public class TestChronoChat {
                     (keyName, KeyType.RSA, DEFAULT_RSA_PUBLIC_KEY_DER, DEFAULT_RSA_PRIVATE_KEY_DER);
             face.setCommandSigningInfo(keyChain, certificateName);
 
+            boolean requireVerification = false;
             DChronoChat chat = new DChronoChat
-                    (screenName, chatRoom, new Name(hubPrefix), face, keyChain, certificateName);
+                    (screenName, userName, chatRoom, new Name(hubPrefix), face, keyChain, certificateName, requireVerification);
 
             // The main loop to process Chat while checking stdin to send a message.
             System.out.println("Enter your chat message. To quit, enter \"leave\" or \"exit\".");
