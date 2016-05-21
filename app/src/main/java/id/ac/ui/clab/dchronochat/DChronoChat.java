@@ -1,5 +1,8 @@
 package id.ac.ui.clab.dchronochat;
 
+import android.media.UnsupportedSchemeException;
+import android.util.Log;
+
 import id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -18,6 +21,8 @@ import net.named_data.jndn.sync.ChronoSync2013;
 import net.named_data.jndn.util.Blob;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -31,6 +36,7 @@ import java.util.logging.Logger;
 
 public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013.OnReceivedSyncState, OnData, OnInterestCallback {
 
+    private static final String LOG_TAG = "DChronoChat";
     private final String screenName; //the screen name of the user
     private final String userName;
     //private final String hubPrefix; //the prefix of the hub
@@ -48,9 +54,11 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
     // Use a non-template ArrayList so it works with older Java compilers.
     private ArrayList messageCache = new ArrayList(); // of CachedMessage
-    private ArrayList roster = new ArrayList(); // of String
+    private ArrayList roster = new ArrayList(); //TODO change from arraylist to map
     private final int maxMessageCacheLength = 100;
     private boolean isRecoverySyncState = true;
+    private String tempName;
+    private int session;
 
 
     public DChronoChat(String screenName, String userName, String chatRoom, Name hubPrefix,
@@ -67,8 +75,9 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
         // This should only be called once, so get the random string here.
 
-        int session = (int)Math.round(getNowMilliseconds() / 1000.0);
-        identityName = new Name(hubPrefix).append("aa"); //identity to append to chatprefix
+        session = (int)Math.round(getNowMilliseconds() / 1000.0);
+        identityName = new Name(hubPrefix).append(userName); //identity to append to chatprefix
+        // TODO see the effect of adding CHATCHANNEL and SESSION to chatPrefix
         chatPrefix = new Name(identityName).append(chatRoom).append(String.valueOf(session)); //the prefix of this chat
 
         try {
@@ -171,6 +180,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
         if (roster.indexOf(userName) < 0) {
             roster.add(userName);
+            //TODO add this to GUI
             System.out.println("Member: " + screenName);
             System.out.println(screenName + ": Join");
             messageCacheAppend(ChatMessage.ChatMessageType.JOIN, "xxx");
@@ -187,26 +197,40 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         isRecoverySyncState = isRecovery;
 
         ArrayList sendList = new ArrayList(); // of String
-        ArrayList sessionNoList = new ArrayList(); // of long
-        ArrayList sequenceNoList = new ArrayList(); // of long
-        for (int j = 0; j < syncStates.size(); ++j) {
+        ArrayList<Long> sessionNoList = new ArrayList<>(); // of long
+        ArrayList<Long> sequenceNoList = new ArrayList<>(); // of long
+        for (int j = 0; j < syncStates.size(); ++j)
+        {
             ChronoSync2013.SyncState syncState = (ChronoSync2013.SyncState)syncStates.get(j);
             Name nameComponents = new Name(syncState.getDataPrefix());
-            String tempName = nameComponents.get(-1).toEscapedString();
+            String tempSession = nameComponents.get(-1).toEscapedString();
+            try {
+                tempName = URLDecoder.decode(nameComponents.get(identityName.size() - 1).toEscapedString(), "UTF-8");
+            }
+            catch (UnsupportedEncodingException e)
+            {
+                Log.e(LOG_TAG, "Encoding not supported");
+            }
+            String tempFullName = tempName + tempSession;
+
             long sessionNo = syncState.getSessionNo();
-            if (!tempName.equals(screenName)) {
+            if (!tempName.equals(userName) || !tempSession.equals(session))
+            {
                 int index = -1;
                 for (int k = 0; k < sendList.size(); ++k) {
-                    if (((String)sendList.get(k)).equals(syncState.getDataPrefix())) {
+                    if ((sendList.get(k)).equals(syncState.getDataPrefix()))
+                    {
                         index = k;
                         break;
                     }
                 }
-                if (index != -1) {
+                if (index != -1)
+                {
                     sessionNoList.set(index, sessionNo);
                     sequenceNoList.set(index, syncState.getSequenceNo());
                 }
-                else{
+                else
+                {
                     sendList.add(syncState.getDataPrefix());
                     sessionNoList.add(sessionNo);
                     sequenceNoList.add(syncState.getSequenceNo());
@@ -214,14 +238,17 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             }
         }
 
-        for (int i = 0; i < sendList.size(); ++i) {
+        for (int i = 0; i < sendList.size(); ++i)
+        {
             String uri = (String)sendList.get(i) + "/" + (long)sessionNoList.get(i) +
                     "/" + (long)sequenceNoList.get(i);
             Interest interest = new Interest(new Name(uri));
             interest.setInterestLifetimeMilliseconds(syncLifetime);
             try {
                 face.expressInterest(interest, this, ChatTimeout.onTimeout);
-            } catch (IOException ex) {
+            }
+            catch (IOException ex)
+            {
                 Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
                 return;
             }
