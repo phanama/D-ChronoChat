@@ -14,6 +14,7 @@ import net.named_data.jndn.InterestFilter;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.OnData;
 import net.named_data.jndn.OnInterestCallback;
+import net.named_data.jndn.OnRegisterFailed;
 import net.named_data.jndn.OnTimeout;
 import net.named_data.jndn.security.KeyChain;
 import net.named_data.jndn.security.SecurityException;
@@ -375,6 +376,33 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
     }
 
+    private static class RegisterFailed implements OnRegisterFailed {
+        public final void
+        onRegisterFailed(Name prefix)
+        {
+            System.out.println("Register failed for prefix " + prefix.toUri());
+        }
+
+        public final static OnRegisterFailed onRegisterFailed = new RegisterFailed();
+    }
+
+    // This is a do-nothing onData for using expressInterest for timeouts.
+    // This should never be called.
+    private static class DummyOnData implements OnData {
+        public final void
+        onData(Interest interest, Data data) {}
+
+        public final static OnData onData = new DummyOnData();
+    }
+
+    private static class ChatTimeout implements OnTimeout {
+        public final void
+        onTimeout(Interest interest) {
+            System.out.println("Timeout waiting for chat data");
+        }
+
+        public final static OnTimeout onTimeout = new ChatTimeout();
+    }
 
     /**
      * This repeatedly calls itself after a timeout to send a heartbeat message
@@ -405,6 +433,10 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             }
         }
     }
+
+
+
+
 
 
     /**

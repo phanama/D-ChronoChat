@@ -20,5 +20,9 @@
         completions."
     </string>
     <string name="send_message">Send a message...</string>
+    <string name="usernameShared">id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS.USERNAME</string>
+    <string name="screennameShared">id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS.SCREENNAME</string>
+    <string name="hubprefixShared">id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS.HUBPREFIX</string>
+
 
 </resources>
