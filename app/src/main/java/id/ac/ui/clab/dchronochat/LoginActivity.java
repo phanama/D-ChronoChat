@@ -114,31 +114,19 @@ public class LoginActivity extends AppCompatActivity  {
         String screenName = mScreenName.getText().toString();
         String hubPrefix = mHubPrefix.getText().toString();
 
-        boolean cancel = false;
-        View focusView = null;
-
         // Check for a valid username
-        if (TextUtils.isEmpty(userName) && (userName.length() > 10)) {
+        if (TextUtils.isEmpty(userName) && (userName.length() > 20)) {
             mUserName.setError("ScreenName must be between 0-10 characters!");
-            focusView = mUserName;
-            cancel = true;
-        } else if (!isEmailValid(userName)) {
+            return;
+        }
+        else if (!isEmailValid(userName)) {
             mUserName.setError(getString(R.string.error_invalid_email));
-            focusView = mUserName;
-            cancel = true;
+            return;
         }
-
         // Check for a valid screenname
-        if (!TextUtils.isEmpty(screenName) && (screenName.length() > 10)) {
+        if (!TextUtils.isEmpty(screenName) && (screenName.length() > 20)) {
             mScreenName.setError("ScreenName must be between 0-10 characters!");
-            focusView = mScreenName;
-            cancel = true;
-        }
-
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
-            focusView.requestFocus();
+            return;
         }
 
         SharedPreferences sp = this.getSharedPreferences("id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS", Context.MODE_PRIVATE);
@@ -146,6 +134,7 @@ public class LoginActivity extends AppCompatActivity  {
         edit.putString("id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS.USERNAME", userName);
         edit.putString("id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS.SCREENNAME", screenName);
         edit.putString("id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS.HUBPREFIX", hubPrefix);
+        edit.apply();
 
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);

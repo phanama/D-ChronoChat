@@ -15,16 +15,25 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
     private SharedPreferences mSharedPrefs;
+    private Button startChat;
+    private String mUserName;
+    private String mScreenName;
+    private String mHubPrefix;
+    private String mChatRoom;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        final Bundle lSavedInstanceState = savedInstanceState;
+        super.onCreate(lSavedInstanceState);
         setContentView(R.layout.activity_main_page);
+        startChat = (Button) findViewById(R.id.startButton);
+
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -56,14 +65,33 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        Bundle extras = getIntent().getExtras();
+        mUserName = mSharedPrefs.getString(getString(R.string.usernameShared), "");
+        mHubPrefix = mSharedPrefs.getString(getString(R.string.hubprefixShared), "");
+        mScreenName = mSharedPrefs.getString(getString(R.string.screennameShared), "");
+        //TODO add chatroom control from user
+        mChatRoom = "TestRoom";
+
+
+        //Bundle extras = getIntent().getExtras();
 //        if (extras != null){
 //            Log.d("Main-bundle",extras.toString() + " Has Chat: " + extras.getString(Constants.CHAT_ROOM));
 //            if (extras.containsKey(getString(R.string.))) this.channel = extras.getString(Constants.CHAT_ROOM);
 //        }
 
+        startChat.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                if (lSavedInstanceState == null) {
+                    // During initial setup, plug in the details fragment.
+                    ChatListFragment details = new ChatListFragment();
+                    details.setArguments(getIntent().getExtras());
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .add(R.id.drawer_layout, ChatListFragment.newInstance(mScreenName, mUserName, mHubPrefix, mChatRoom), "chatItemList")
+                            .commit();
+                }
 
-
+            }
+        });
     }
 
     @Override
