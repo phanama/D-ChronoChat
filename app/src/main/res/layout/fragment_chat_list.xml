@@ -25,15 +25,17 @@
             android:onClick="changeChannel"
             android:layout_alignParentTop="true"/>
 
-        <ListView
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        <android.support.v7.widget.RecyclerView
             android:id="@+id/listItemChat"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:divider="@null"
+            android:orientation="vertical"
             android:layout_below="@id/channel_bar"
             android:transcriptMode="alwaysScroll"
-            android:layout_above="@+id/msg_box"/>
+            android:layout_above="@+id/msg_box"
+            />
 
         <View
             android:layout_width="match_parent"
