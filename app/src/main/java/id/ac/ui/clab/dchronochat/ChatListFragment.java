@@ -30,9 +30,24 @@ import id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage;
  */
 public class ChatListFragment extends Fragment {
     private List<ChatMessage> values;
+    private String screenName;
+    private String hubPrefix;
+    private String userName;
+    private String chatRoom;
 
-    public static ChatListFragment newInstance() {
-        return new ChatListFragment();
+
+    public static ChatListFragment newInstance(String screenName, String userName, String hubPrefix, String chatRoom) {
+        ChatListFragment fragment = new ChatListFragment();
+
+        //Get the argument from MainActivity calling this fragment
+        Bundle args = new Bundle();
+        args.putString("screenName", screenName);
+        args.putString("userName", userName);
+        args.putString("hubPrefix", hubPrefix);
+        args.putString("chatRoom", chatRoom);
+        fragment.setArguments(args);
+
+        return fragment;
     }
 
     @Override

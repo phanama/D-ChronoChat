@@ -23,6 +23,7 @@
     <string name="usernameShared">id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS.USERNAME</string>
     <string name="screennameShared">id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS.SCREENNAME</string>
     <string name="hubprefixShared">id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS.HUBPREFIX</string>
+    <string name="sharedPrefs">id.ac.ui.clab.dchronochat.DChronoChat.SHARED-PREFS</string>
 
 
 </resources>
