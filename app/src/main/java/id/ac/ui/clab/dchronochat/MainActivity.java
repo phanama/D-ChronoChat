@@ -71,7 +71,6 @@ public class MainActivity extends AppCompatActivity
         //TODO add chatroom control from user
         mChatRoom = "TestRoom";
 
-
         //Bundle extras = getIntent().getExtras();
 //        if (extras != null){
 //            Log.d("Main-bundle",extras.toString() + " Has Chat: " + extras.getString(Constants.CHAT_ROOM));

@@ -435,10 +435,6 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     }
 
 
-
-
-
-
     /**
      * This is called after a timeout to check if the user with prefix has a newer
      * sequence number than the given temp_seq. If not, assume the user is idle and
