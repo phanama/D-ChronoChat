@@ -60,6 +60,7 @@ public class ChatListFragment extends Fragment {
     private final static int MAXLEN = 1000;
     final static int session = (int)Math.round(DChronoChat.getNowMilliseconds() / 1000.0);
     private ArrayList<HashMap<String, Face>> m_faceList = new ArrayList<HashMap<String, Face>>();
+    private ChatAdapter mChatAdapter;
 
 
     public static ChatListFragment newInstance(String screenName, String userName, String hubPrefix, String chatRoom) {
@@ -104,7 +105,8 @@ public class ChatListFragment extends Fragment {
 
         final RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.listItemChat);
         recyclerView.setLayoutManager(new LinearLayoutManager(activity));
-        recyclerView.setAdapter(new ChatAdapter(this.getActivity(), mMessageList));
+        mChatAdapter = new ChatAdapter(this.getActivity(), mMessageList);
+        recyclerView.setAdapter(mChatAdapter);
 
         mInputText = (EditText) view.findViewById(R.id.inputText);
         mSendButton = (Button) view.findViewById(R.id.sendButton);
@@ -247,9 +249,15 @@ public class ChatListFragment extends Fragment {
                         dChronoChat.sendMessage(input);
                     }
                     face.processEvents();
-                    mMessageList = dChronoChat.getMessageCache();
-
-
+                    //Experimental
+                    mMessageList = dChronoChat.getChatList();
+                    getActivity().runOnUiThread(new Runnable(){
+                        @Override
+                        public void run()
+                        {
+                            mChatAdapter.refreshList(mMessageList);
+                        }
+                    });
                     // We need to sleep for a few milliseconds so we don't use 100% of the CPU.
                     Thread.sleep(15);
                 }
