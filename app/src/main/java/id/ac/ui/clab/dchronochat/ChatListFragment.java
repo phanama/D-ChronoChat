@@ -1,6 +1,7 @@
 package id.ac.ui.clab.dchronochat;
 
 import android.app.Activity;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.res.Resources;
@@ -15,6 +16,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -31,7 +34,9 @@ import net.named_data.jndn.util.Blob;
 
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -43,12 +48,18 @@ import id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage;
  * Created by yudiandreanp on 21/05/16.
  */
 public class ChatListFragment extends Fragment {
-    private List<ChatMessage> mMessageList;
-    private String mScreenName;
-    private String mHubPrefix;
-    private String mUserName;
-    private String mChatRoom;
+    private ArrayList<ChatMessage> mMessageList;
+    private String screenName;
+    private String hubPrefix;
+    private String userName;
+    private String chatRoom;
     private DChronoChat mChronoChat;
+    private ChronoWorker mChronoWorker;
+    private Button mSendButton;
+    private EditText mInputText;
+    private final static int MAXLEN = 1000;
+    final static int session = (int)Math.round(DChronoChat.getNowMilliseconds() / 1000.0);
+    private ArrayList<HashMap<String, Face>> m_faceList = new ArrayList<HashMap<String, Face>>();
 
 
     public static ChatListFragment newInstance(String screenName, String userName, String hubPrefix, String chatRoom) {
@@ -80,10 +91,42 @@ public class ChatListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_chat_list, container, false);
         final Activity activity = getActivity();
+        Bundle args = getArguments();
+        screenName = args.getString("screenName", "testUser");
+        userName = args.getString("userName", "test@mail.com");
+        hubPrefix = args.getString("hubPrefix", "/ndn/edu/ucla/remap");
+        chatRoom = args.getString("chatRoom", "testRoom");
+
+        mMessageList = new ArrayList<ChatMessage>();
+        mChronoWorker = new ChronoWorker(screenName, userName, hubPrefix, chatRoom, getContext());
+        mChronoWorker.prepareWorker();
+        mChronoWorker.start();
 
         final RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.listItemChat);
         recyclerView.setLayoutManager(new LinearLayoutManager(activity));
         recyclerView.setAdapter(new ChatAdapter(this.getActivity(), mMessageList));
+
+        mInputText = (EditText) view.findViewById(R.id.inputText);
+        mSendButton = (Button) view.findViewById(R.id.sendButton);
+        mSendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String tmp = mInputText.getText().toString();
+                if (tmp.equals("")) {
+                    Snackbar.make(view, "The Message can't be empty!", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                    return;
+                }
+                if (tmp.length() > MAXLEN) {
+                    Snackbar.make(view, "The Message is too long!", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                    return;
+                }
+                mInputText.setText("");
+                mChronoWorker.setReady(tmp);
+            }
+        });
+
         return view;
     }
 
@@ -121,7 +164,7 @@ public class ChatListFragment extends Fragment {
     class ChronoWorker extends Thread{
         private String mScreenName;
         private String mHubPrefix;
-        private String mUsername;
+        private String mUserName;
         private String mChatRoom;
         private String host;
         private Face face;
@@ -134,7 +177,7 @@ public class ChatListFragment extends Fragment {
         public ChronoWorker(String screenName, String userName, String hubPrefix, String chatRoom, Context context)
         {
             mScreenName = screenName;
-            mUsername = userName;
+            mUserName = userName;
             mHubPrefix = hubPrefix;
             mChatRoom = chatRoom;
             mContext = context;
@@ -151,9 +194,9 @@ public class ChatListFragment extends Fragment {
             isConnect = false;
         }
 
-        public void setReady(String str) {
-            Log.i(CW_LOG_TAG, "ChronoWorker is ready to send: " + str);
-            input = str;
+        public void setReady(String message) {
+            Log.i(CW_LOG_TAG, "ChronoWorker is ready to send: " + message);
+            input = message;
             isReady = true;
         }
 
@@ -179,6 +222,9 @@ public class ChatListFragment extends Fragment {
                         (keyName, KeyType.RSA, DEFAULT_RSA_PUBLIC_KEY_DER, DEFAULT_RSA_PRIVATE_KEY_DER);
                 face.setCommandSigningInfo(keyChain, certificateName);
 
+                //Trying without verification
+
+                boolean requireVerification = false;
                 DChronoChat dChronoChat = new DChronoChat(
                                                 mScreenName,
                                                 mUserName,
@@ -187,7 +233,42 @@ public class ChatListFragment extends Fragment {
                                                 face,
                                                 keyChain,
                                                 certificateName,
-                                                false);
+                                                requireVerification);
+
+                while (isConnect)
+                {
+                    if (isReady)
+                    {
+                        isReady = false;
+                        if (input.equals("leave") || input.equals("exit"))
+                            // We will send the leave message below.
+                            break;
+
+                        dChronoChat.sendMessage(input);
+                    }
+                    face.processEvents();
+                    mMessageList = dChronoChat.getMessageCache();
+
+
+                    // We need to sleep for a few milliseconds so we don't use 100% of the CPU.
+                    Thread.sleep(15);
+                }
+
+                // The user entered the command to leave.
+                dChronoChat.leave();
+
+                // Wait a little bit to allow other applications to fetch the leave message.
+                double startTime = DChronoChat.getNowMilliseconds();
+
+                while (true)
+                {
+                    if (DChronoChat.getNowMilliseconds() - startTime >= 1000.0)
+                        break;
+
+                    face.processEvents();
+                    Thread.sleep(10);
+                }
+
             }
 
             catch (Exception e)
@@ -324,16 +405,7 @@ public class ChatListFragment extends Fragment {
     });
 
 
-
-
 //        //TODO Clean up these mess
-//        class ViewHolder {
-//            TextView user;
-//            TextView message;
-//            TextView timeStamp;
-//            View userPresence;
-//            ChatMessage chatMsg;
-//        }
 //
 //
 //        public View getView(final int position, View convertView, ViewGroup parent) {

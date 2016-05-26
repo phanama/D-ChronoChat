@@ -45,7 +45,10 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatHolder> {
     @Override
     public int getItemCount()
     {
-        return mMessageList.size();
+        if (mMessageList != null) {
+            return mMessageList.size();
+        }
+        return 0;
     }
 
     public void refreshList(List<ChatbufProto.ChatMessage> messageList){

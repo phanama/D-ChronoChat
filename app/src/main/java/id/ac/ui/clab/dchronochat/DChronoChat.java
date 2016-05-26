@@ -56,7 +56,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     // Use a non-template ArrayList so it works with older Java compilers.
     private ArrayList messageCache = new ArrayList(); // of CachedMessage
     private ArrayList roster = new ArrayList(); //TODO change from arraylist to map
-    private final int maxMessageCacheLength = 100;
+    private final int maxMessageCacheLength = 250;
     private boolean isRecoverySyncState = true;
     private String tempName;
     private int session;
@@ -112,7 +112,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         if (!chatMessage.equals("")) {
             sync.publishNextSequenceNo();
             messageCacheAppend(ChatMessage.ChatMessageType.CHAT, chatMessage);
-            System.out.println(screenName + ": " + chatMessage);
+            Log.i(LOG_TAG,screenName + ": " + chatMessage);
         }
     }
 
@@ -182,8 +182,8 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         if (roster.indexOf(userName) < 0) {
             roster.add(userName);
             //TODO add this to GUI
-            System.out.println("Member: " + screenName);
-            System.out.println(screenName + ": Join");
+            Log.i(LOG_TAG, "Member: " + screenName);
+            Log.i(LOG_TAG, screenName + ": Join");
             messageCacheAppend(ChatMessage.ChatMessageType.JOIN, "xxx");
         }
     }
@@ -263,9 +263,12 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     (Name prefix, Interest interest, Face face, long interestFilterId,
      InterestFilter filter)
     {
-        ChatMessage.Builder builder = ChatMessage.newBuilder();
+        ChatMessage.Builder builder = ChatMessage.newBuilder(); //builder to build chatmessage instance
+
         long sequenceNo = Long.parseLong(interest.getName().get(chatPrefix.size() + 1).toEscapedString());
         boolean gotContent = false;
+
+        //Find the right chat message in messageCache
         for (int i = messageCache.size() - 1; i >= 0; --i) {
             CachedMessage message = (CachedMessage)messageCache.get(i);
             if (message.getSequenceNo() == sequenceNo) {
@@ -287,6 +290,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             }
         }
 
+        //forge the Chat into Data
         if (gotContent) {
             ChatMessage content = builder.build();
             byte[] array = content.toByteArray();
@@ -295,13 +299,15 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             try {
                 keyChain.sign(data, certificateName);
             } catch (SecurityException ex) {
-                Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
+                Log.e(LOG_TAG, "Security Exception : " + ex + " when signing Chat Data!");
+                //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
                 return;
             }
             try {
                 face.putData(data);
             } catch (IOException ex) {
-                Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
+                Log.e(LOG_TAG, "IOException : " + ex + " when putting Chat Data to Face!");
+                //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -311,11 +317,14 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     public final void
     onData(Interest interest, Data data)
     {
+        Log.i(LOG_TAG, ">>onData:" + data.getContent().toString());
+
         ChatMessage content;
         try {
             content = ChatMessage.parseFrom(data.getContent().getImmutableArray());
         } catch (InvalidProtocolBufferException ex) {
-            Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
+            Log.e(LOG_TAG, "InvalidProtocolBufferException when onData!");
+            //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
         if (getNowMilliseconds() - content.getTimestamp() * 1000.0 < 120000.0) {
@@ -325,25 +334,27 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             long sequenceNo = Long.parseLong(data.getName().get(-1).toEscapedString());
             String nameAndSession = name + sessionNo;
 
-            int l = 0;
+            int length = 0;
             //update roster
-            while (l < roster.size()) {
-                String entry = (String)roster.get(l);
+            while (length < roster.size()) {
+                String entry = (String)roster.get(length);
                 String tempName = entry.substring(0, entry.length() - 10);
                 long tempSessionNo = Long.parseLong(entry.substring(entry.length() - 10));
                 if (!name.equals(tempName) && !content.getType().equals(ChatMessage.ChatMessageType.LEAVE))
-                    ++l;
+                    ++length;
                 else {
                     if (name.equals(tempName) && sessionNo > tempSessionNo)
-                        roster.set(l, nameAndSession);
+                        roster.set(length, nameAndSession);
                     break;
                 }
             }
 
-            if (l == roster.size()) {
+            if (length == roster.size()) {
                 roster.add(nameAndSession);
-                System.out.println(name + ": Join");
+                Log.i(LOG_TAG, name + ": Join");
             }
+
+
 
             // Set the alive timeout using the Interest timeout mechanism.
             // TODO: Using a "/local/timeout" interest ,is this the best approach?
@@ -354,7 +365,8 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                         (timeout, DummyOnData.onData,
                                 this.new Alive(sequenceNo, name, sessionNo, prefix));
             } catch (IOException ex) {
-                Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
+                Log.e(LOG_TAG, "IOException when onData!");
+                //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
                 return;
             }
 
@@ -464,12 +476,17 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             if (sequenceNo != -1 && n >= 0) {
                 if (tempSequenceNo == sequenceNo) {
                     roster.remove(n);
-                    System.out.println(name + ": Leave");
+                    Log.i(LOG_TAG, name + ": Leave");
                 }
             }
         }
 
 
+    }
+
+    public ArrayList getMessageCache()
+    {
+        return messageCache;
     }
 
 }
