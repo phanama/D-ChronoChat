@@ -53,7 +53,6 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     private final boolean requireVerification;
     private Name identityName;
 
-    // Use a non-template ArrayList so it works with older Java compilers.
     private ArrayList messageCache = new ArrayList(); // of CachedMessage
     private ArrayList<ChatMessage> chatMessageList = new ArrayList(); // of All ChatMessage
     private ArrayList roster = new ArrayList(); //TODO change from arraylist to map

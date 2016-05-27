@@ -1,5 +1,6 @@
 package id.ac.ui.clab.dchronochat;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -77,31 +78,31 @@ public class MainActivity extends AppCompatActivity
 //            if (extras.containsKey(getString(R.string.))) this.channel = extras.getString(Constants.CHAT_ROOM);
 //        }
 
-//        startChat.setOnClickListener(new Button.OnClickListener()
-//        {
-//            public void onClick(View v) {
-//                if (lSavedInstanceState == null) {
-//                    // During initial setup, plug in the details fragment.
-//                    ChatListFragment details = new ChatListFragment();
-//                    details.setArguments(getIntent().getExtras());
-//                    getSupportFragmentManager()
-//                            .beginTransaction()
-//                            .add(R.id.drawer_layout, ChatListFragment.newInstance(mScreenName, mUserName, mHubPrefix, mChatRoom), "chatItemList")
-//                            .commit();
-//                }
-//
-//            }
-//        });
+        startChat.setOnClickListener(new Button.OnClickListener()
+        {
+            public void onClick(View v) {
+                if (lSavedInstanceState == null) {
+                    // During initial setup, plug in the details fragment.
+                    ChatListFragment details = new ChatListFragment();
+                    details.setArguments(getIntent().getExtras());
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .add(R.id.drawer_layout, ChatListFragment.newInstance(mScreenName, mUserName, mHubPrefix, mChatRoom), "chatItemList")
+                            .commit();
+                }
 
-        if (lSavedInstanceState == null) {
-            // During initial setup, plug in the details fragment.
-            ChatListFragment details = new ChatListFragment();
-            details.setArguments(getIntent().getExtras());
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.drawer_layout, ChatListFragment.newInstance(mScreenName, mUserName, mHubPrefix, mChatRoom), "chatItemList")
-                    .commit();
-        }
+            }
+        });
+
+//        if (lSavedInstanceState == null) {
+//            // During initial setup, plug in the details fragment.
+//            ChatListFragment details = new ChatListFragment();
+//            details.setArguments(getIntent().getExtras());
+//            getSupportFragmentManager()
+//                    .beginTransaction()
+//                    .add(R.id.drawer_layout, ChatListFragment.newInstance(mScreenName, mUserName, mHubPrefix, mChatRoom), "chatItemList")
+//                    .commit();
+//        }
     }
 
     @Override
@@ -130,6 +131,8 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent i = new Intent(this, SettingsActivity.class);
+            MainActivity.this.startActivity(i);
             return true;
         }
 
@@ -149,8 +152,11 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_slideshow) {
 
         } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
+            Intent i = new Intent(this, SettingsActivity.class);
+            MainActivity.this.startActivity(i);
+            return true;
+        }
+        else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
 
