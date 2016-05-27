@@ -77,20 +77,31 @@ public class MainActivity extends AppCompatActivity
 //            if (extras.containsKey(getString(R.string.))) this.channel = extras.getString(Constants.CHAT_ROOM);
 //        }
 
-        startChat.setOnClickListener(new Button.OnClickListener() {
-            public void onClick(View v) {
-                if (lSavedInstanceState == null) {
-                    // During initial setup, plug in the details fragment.
-                    ChatListFragment details = new ChatListFragment();
-                    details.setArguments(getIntent().getExtras());
-                    getSupportFragmentManager()
-                            .beginTransaction()
-                            .add(R.id.drawer_layout, ChatListFragment.newInstance(mScreenName, mUserName, mHubPrefix, mChatRoom), "chatItemList")
-                            .commit();
-                }
+//        startChat.setOnClickListener(new Button.OnClickListener()
+//        {
+//            public void onClick(View v) {
+//                if (lSavedInstanceState == null) {
+//                    // During initial setup, plug in the details fragment.
+//                    ChatListFragment details = new ChatListFragment();
+//                    details.setArguments(getIntent().getExtras());
+//                    getSupportFragmentManager()
+//                            .beginTransaction()
+//                            .add(R.id.drawer_layout, ChatListFragment.newInstance(mScreenName, mUserName, mHubPrefix, mChatRoom), "chatItemList")
+//                            .commit();
+//                }
+//
+//            }
+//        });
 
-            }
-        });
+        if (lSavedInstanceState == null) {
+            // During initial setup, plug in the details fragment.
+            ChatListFragment details = new ChatListFragment();
+            details.setArguments(getIntent().getExtras());
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.drawer_layout, ChatListFragment.newInstance(mScreenName, mUserName, mHubPrefix, mChatRoom), "chatItemList")
+                    .commit();
+        }
     }
 
     @Override

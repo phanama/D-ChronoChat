@@ -153,7 +153,7 @@ public class ChatListFragment extends Fragment {
         public void bindData(ChatbufProto.ChatMessage chatMessage) {
             mChatMessage = chatMessage;
             mScreenName.setText(chatMessage.getFrom());
-            mChatTime.setText(chatMessage.getTimestamp());
+            mChatTime.setText(String.valueOf(chatMessage.getTimestamp()));
             mMessage.setText(chatMessage.getData());
         }
     }
