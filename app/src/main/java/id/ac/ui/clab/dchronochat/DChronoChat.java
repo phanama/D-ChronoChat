@@ -72,12 +72,13 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         this.certificateName = certificateName;
         heartbeat = new Heartbeat();
         this.requireVerification = requireVerification;
-        this.userName = userName; //the email
+        //this.userName = userName; //the email
 
         // This should only be called once, so get the random string here.
 
         session = (int)Math.round(getNowMilliseconds() / 1000.0);
-        identityName = new Name(hubPrefix).append(userName); //identity to append to chatprefix
+        this.userName = screenName + session;
+        identityName = new Name(hubPrefix).append(this.userName); //identity to append to chatprefix
         // TODO see the effect of adding CHATCHANNEL and SESSION to chatPrefix
         chatPrefix = new Name(identityName).append(chatRoom).append(String.valueOf(session)); //the prefix of this chat
 
@@ -279,6 +280,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     (Name prefix, Interest interest, Face face, long interestFilterId,
      InterestFilter filter)
     {
+        Log.i("OnInterest", "Got New Interest!");
         ChatMessage.Builder builder = ChatMessage.newBuilder(); //builder to build chatmessage instance
 
         long sequenceNo = Long.parseLong(interest.getName().get(chatPrefix.size() + 1).toEscapedString());
@@ -449,6 +451,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                 messageCacheAppend(ChatMessage.ChatMessageType.JOIN, "xxx");
             try {
                 sync.publishNextSequenceNo();
+                Log.i("Hearbeat", "Published new sequence");
             } catch (IOException | SecurityException ex) {
                 Log.e(LOG_TAG, "Exception : " + ex + " when publishing new sequence!");
                 //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
@@ -462,6 +465,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             timeout.setInterestLifetimeMilliseconds(60000);
             try {
                 face.expressInterest(timeout, DummyOnData.onData, heartbeat);
+                Log.i("Hearbeat", "Published new sequence2");
             } catch (IOException ex) {
                 Log.e(LOG_TAG, "Exception : " + ex + " when expressing Heartbeat!");
                 //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);

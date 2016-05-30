@@ -95,7 +95,7 @@ public class ChatListFragment extends Fragment {
         Bundle args = getArguments();
         screenName = args.getString("screenName", "testUser");
         userName = args.getString("userName", "test@mail.com");
-        hubPrefix = args.getString("hubPrefix", "/ndn/edu/ucla/remap");
+        hubPrefix = args.getString("hubPrefix", "/ndn/clab/USER");
         chatRoom = args.getString("chatRoom", "testRoom");
 
         mMessageList = new ArrayList<ChatMessage>();
@@ -208,7 +208,7 @@ public class ChatListFragment extends Fragment {
             try
             {
                 //Create new face
-                face = new Face();
+                face = new Face("localhost");
 
                 MemoryIdentityStorage identityStorage = new MemoryIdentityStorage();
                 MemoryPrivateKeyStorage privateKeyStorage = new MemoryPrivateKeyStorage();
