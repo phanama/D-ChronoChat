@@ -185,7 +185,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         // heartbeat() function will call itself again after a timeout.
         // TODO: Using a "/local/timeout" interest ,is this the best approach?
         Interest interestTimeout = new Interest(new Name("/local/timeout"));
-        timeout.setInterestLifetimeMilliseconds(60000);
+        interestTimeout.setInterestLifetimeMilliseconds(60000);
         try 
         {
             face.expressInterest(interestTimeout, DummyOnData.onData, heartbeat);
@@ -256,7 +256,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                 }
                 else
                 {
-                    sesequenceNondList.add(syncState.getDataPrefix());
+                    sequenceNoList.add(syncState.getDataPrefix());
                     sessionNoList.add(sessionNo);
                     sequenceNoList.add(syncState.getSequenceNo());
                 }
