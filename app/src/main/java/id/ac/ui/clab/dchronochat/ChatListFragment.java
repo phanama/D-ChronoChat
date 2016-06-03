@@ -216,7 +216,7 @@ public class ChatListFragment extends Fragment {
                         (new IdentityManager(identityStorage, privateKeyStorage),
                                 new NoVerifyPolicyManager());
                 keyChain.setFace(face);
-                Name keyName = new Name("/testname/DSK-123");
+                Name keyName = new Name("/testname/DSK-12345");
                 Name certificateName = keyName.getSubName(0, keyName.size() - 1).append
                         ("KEY").append(keyName.get(-1)).append("ID-CERT").append("0");
                 identityStorage.addKey(keyName, KeyType.RSA, new Blob(DEFAULT_RSA_PUBLIC_KEY_DER, false));
@@ -244,12 +244,13 @@ public class ChatListFragment extends Fragment {
                         isReady = false;
                         if (input.equals("leave") || input.equals("exit"))
                             // We will send the leave message below.
-                            break;
+                            {break;}
 
                         dChronoChat.sendMessage(input);
                     }
                     face.processEvents();
                     //Experimental
+                    Thread.sleep(5);
                     mMessageList = dChronoChat.getChatList();
                     getActivity().runOnUiThread(new Runnable(){
                         @Override
@@ -259,7 +260,7 @@ public class ChatListFragment extends Fragment {
                         }
                     });
                     // We need to sleep for a few milliseconds so we don't use 100% of the CPU.
-                    Thread.sleep(15);
+                    Thread.sleep(10);
                 }
 
                 // The user entered the command to leave.
@@ -412,104 +413,6 @@ public class ChatListFragment extends Fragment {
             0xcb, 0xea, 0x8f
     });
 
-
-//        //TODO Clean up these mess
-//
-//
-//        public View getView(final int position, View convertView, ViewGroup parent) {
-//            ChatMessage chatMsg = this.values.get(position);
-//            ViewHolder holder;
-//            if (convertView == null) {
-//                holder = new ViewHolder();
-//                convertView = inflater.inflate(R.layout.list_item_chat, parent, false);
-//                holder.user = (TextView) convertView.findViewById(R.id.screenName);
-//                holder.message = (TextView) convertView.findViewById(R.id.chat_message);
-//                holder.timeStamp = (TextView) convertView.findViewById(R.id.chat_time);
-//                holder.userPresence = convertView.findViewById(R.id.user_presence);
-//                convertView.setTag(holder);
-//            } else {
-//                holder = (ViewHolder) convertView.getTag();
-//            }
-//            holder.user.setText(chatMsg.getFrom());
-//            holder.message.setText(chatMsg.getData());
-//            holder.timeStamp.setText(formatTimeStamp(chatMsg.getTimestamp()));
-//            holder.chatMsg=chatMsg;
-//            holder.userPresence.setBackgroundDrawable( // If online show the green presence dot
-//                    this.onlineNow.contains(chatMsg.getFrom())
-//                            ? context.getResources().getDrawable(R.drawable.online_circle)
-//                            : null);
-//            return convertView;
-//        }
-//
-//
-//        /**
-//         * Method to add a single message and update the listview.
-//         * @param chatMsg Message to be added
-//         */
-//        public void addMessage(ChatMessage chatMsg){
-//            this.values.add(chatMsg);
-//            notifyDataSetChanged();
-//        }
-//
-//        /**
-//         * Method to add a list of messages and update the listview.
-//         * @param chatMsgs Messages to be added
-//         */
-//        public void setMessages(List<ChatMessage> chatMsgs){
-//            this.values.clear();
-//            this.values.addAll(chatMsgs);
-//            notifyDataSetChanged();
-//        }
-//
-//        /**
-//         * Handle users. Fill the onlineNow set with current users. Data is used to display a green dot
-//         *   next to users who are currently online.
-//         * @param user UUID of the user online.
-//         * @param action The presence action
-//         */
-//        public void userPresence(String user, String action){
-//            boolean isOnline = action.equals("join") || action.equals("state-change");
-//            if (!isOnline && this.onlineNow.contains(user))
-//                this.onlineNow.remove(user);
-//            else if (isOnline && !this.onlineNow.contains(user))
-//                this.onlineNow.add(user);
-//
-//            notifyDataSetChanged();
-//        }
-//
-//        /**
-//         * Overwrite the onlineNow array with all the values attained from a call to hereNow().
-//         * @param onlineNow
-//         */
-//        public void setOnlineNow(Set<String> onlineNow){
-//            this.onlineNow = onlineNow;
-//            notifyDataSetChanged();
-//        }
-//
-//        /**
-//         * Format the long System.currentTimeMillis() to a better looking timestamp. Uses a calendar
-//         *   object to format with the user's current time zone.
-//         * @param timeStamp
-//         * @return
-//         */
-//        public String formatTimeStamp(long timeStamp){
-//            // Create a DateFormatter object for displaying date in specified format.
-//            SimpleDateFormat formatter = new SimpleDateFormat("hh:mm a");
-//
-//            // Create a calendar object that will convert the date and time value in milliseconds to date.
-//            Calendar calendar = Calendar.getInstance();
-//            calendar.setTimeInMillis(timeStamp);
-//            return formatter.format(calendar.getTime());
-//        }
-//
-//        /**
-//         * Clear all values from the values array and update the listview. Used when changing rooms.
-//         */
-//        public void clearMessages(){
-//            this.values.clear();
-//            notifyDataSetChanged();
-//        }
-//
 }
 
 

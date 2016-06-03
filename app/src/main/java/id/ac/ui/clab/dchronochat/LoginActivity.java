@@ -47,7 +47,6 @@ import static android.Manifest.permission.READ_CONTACTS;
 public class LoginActivity extends AppCompatActivity  {
 
     // UI references.
-    private View mProgressView;
     private View mCreateRoomView;
     private AutoCompleteTextView mUserName;
     private EditText mScreenName;

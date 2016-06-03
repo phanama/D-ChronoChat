@@ -138,7 +138,6 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         messageCacheAppend(ChatMessage.ChatMessageType.LEAVE, "xxx");
     }
 
-
     /**
      * Append a new CachedMessage to messageCache, using given messageType and message,
      * the sequence number from sync.getSequenceNo() and the current time. Also
@@ -176,7 +175,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     public static double
     getNowMilliseconds() { return (double)System.currentTimeMillis(); }
 
-    // initial: push the JOIN message in to the messageCache_, update roster and
+    // initial: push the JOIN message in to the messageCache, update roster and
     // start the heartbeat.
     // (Do not call this. It is only public to implement the interface.)
     public final void
@@ -185,23 +184,32 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         // Set the heartbeat timeout using the Interest timeout mechanism. The
         // heartbeat() function will call itself again after a timeout.
         // TODO: Using a "/local/timeout" interest ,is this the best approach?
-        Interest timeout = new Interest(new Name("/local/timeout"));
+        Interest interestTimeout = new Interest(new Name("/local/timeout"));
         timeout.setInterestLifetimeMilliseconds(60000);
-        try {
-            face.expressInterest(timeout, DummyOnData.onData, heartbeat);
-        } catch (IOException ex) {
+        try 
+        {
+            face.expressInterest(interestTimeout, DummyOnData.onData, heartbeat);
+        } 
+        catch (IOException ex) 
+        {
             Log.e(LOG_TAG, "Exception : " + ex + " when expressing Interest in onInitialized!");
             //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
 
         if (roster.indexOf(userName) < 0) {
-            roster.add(userName);
-
-            Log.i(LOG_TAG, "Member: " + screenName);
-            Log.i(LOG_TAG, screenName + ": Join");
-            messageCacheAppend(ChatMessage.ChatMessageType.JOIN, "xxx");
+            join();
         }
+    }
+
+    //Send join message
+    public void join()
+    {
+        roster.add(userName);
+
+        Log.i(LOG_TAG, "Member: " + screenName);
+        Log.i(LOG_TAG, screenName + ": Join");
+        messageCacheAppend(ChatMessage.ChatMessageType.JOIN, "xxx");
     }
 
     // sendInterest: Send a Chat Interest to fetch chat messages after the
@@ -248,7 +256,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                 }
                 else
                 {
-                    sendList.add(syncState.getDataPrefix());
+                    sesequenceNondList.add(syncState.getDataPrefix());
                     sessionNoList.add(sessionNo);
                     sequenceNoList.add(syncState.getSequenceNo());
                 }
@@ -459,7 +467,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             }
             messageCacheAppend(ChatMessage.ChatMessageType.HELLO, "xxx");
 
-            // Call again.
+            // Call again after joining.
             // TODO: Are we sure using a "/local/timeout" interest is the best future call approach?
             Interest timeout = new Interest(new Name("/local/timeout"));
             timeout.setInterestLifetimeMilliseconds(60000);
@@ -472,6 +480,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             }
         }
     }
+    
     /**
      * This is called after a timeout to check if the user with prefix has a newer
      * sequence number than the given temp_seq. If not, assume the user is idle and
