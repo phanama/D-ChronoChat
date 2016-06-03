@@ -256,7 +256,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                 }
                 else
                 {
-                    sequenceNoList.add(syncState.getDataPrefix());
+                    sendList.add(syncState.getDataPrefix());
                     sessionNoList.add(sessionNo);
                     sequenceNoList.add(syncState.getSequenceNo());
                 }
