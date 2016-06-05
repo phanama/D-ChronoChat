@@ -46,6 +46,14 @@
                 android:id="@+id/startButton"
                 android:layout_row="0"
                 android:layout_column="0" />
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/editRouterIP"
+                android:layout_below="@+id/startButton"
+                android:hint="Router IP Address"
+                android:layout_centerHorizontal="true" />
         </GridLayout>
 
         <android.support.design.widget.FloatingActionButton

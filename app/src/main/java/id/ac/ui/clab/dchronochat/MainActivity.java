@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -17,16 +18,24 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.EditText;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
     private SharedPreferences mSharedPrefs;
     private Button startChat;
+    private EditText editRouterIP; //edittext to inssert router IP
     private String mUserName;
     private String mScreenName;
     private String mHubPrefix;
     private String mChatRoom;
+    private String mRouterIP;
+    private static final String IPADDRESS_PATTERN =
+            "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +43,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(lSavedInstanceState);
         setContentView(R.layout.activity_main_page);
         startChat = (Button) findViewById(R.id.startButton);
-
+        editRouterIP = (EditText) findViewById(R.id.editRouterIP);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -69,26 +78,34 @@ public class MainActivity extends AppCompatActivity
         mUserName = mSharedPrefs.getString(getString(R.string.usernameShared), "");
         mHubPrefix = mSharedPrefs.getString(getString(R.string.hubprefixShared), "");
         mScreenName = mSharedPrefs.getString(getString(R.string.screennameShared), "");
-        //TODO add chatroom control from user
         mChatRoom = "TestRoom";
-
-        //Bundle extras = getIntent().getExtras();
-//        if (extras != null){
-//            Log.d("Main-bundle",extras.toString() + " Has Chat: " + extras.getString(Constants.CHAT_ROOM));
-//            if (extras.containsKey(getString(R.string.))) this.channel = extras.getString(Constants.CHAT_ROOM);
-//        }
 
         startChat.setOnClickListener(new Button.OnClickListener()
         {
             public void onClick(View v) {
                 if (lSavedInstanceState == null) {
-                    // During initial setup, plug in the details fragment.
-                    ChatListFragment details = new ChatListFragment();
-                    details.setArguments(getIntent().getExtras());
-                    getSupportFragmentManager()
-                            .beginTransaction()
-                            .add(R.id.drawer_layout, ChatListFragment.newInstance(mScreenName, mUserName, mHubPrefix, mChatRoom), "chatItemList")
-                            .commit();
+
+                    mRouterIP = editRouterIP.getText().toString();
+
+                    if (!isIPValid(mRouterIP))
+                    {
+                        editRouterIP.setError("IP Address Invalid!");
+                        return;
+                    }
+                    else if (isIPValid(mRouterIP))
+                    {
+                        // During initial setup, plug in the details fragment.
+                        ChatListFragment details = new ChatListFragment();
+                        details.setArguments(getIntent().getExtras());
+                        getSupportFragmentManager()
+                                .beginTransaction()
+                                .add(R.id.drawer_layout, ChatListFragment.newInstance(mScreenName, mUserName, mHubPrefix, mChatRoom, mRouterIP), "chatItemList")
+                                .commit();
+                    }
+                    if (TextUtils.isEmpty(mRouterIP))
+                    {
+                        editRouterIP.setError("Cannot be empty!");
+                    }
                 }
 
             }
@@ -165,5 +182,11 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    static boolean isIPValid(String IP) {
+        Pattern pattern = Pattern.compile(IPADDRESS_PATTERN);
+        Matcher matcher = pattern.matcher(IP);
+        return matcher.find();
     }
 }

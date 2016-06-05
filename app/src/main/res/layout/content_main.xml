@@ -18,12 +18,6 @@
             android:text="Start Chat"
             android:id="@+id/startButton" />
 
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/editRouterIP"
-            android:layout_below="@+id/startButton"
-            android:hint="Router IP Address"
-            android:layout_centerHorizontal="true" />
+
 
 </RelativeLayout>
