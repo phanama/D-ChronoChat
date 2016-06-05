@@ -61,9 +61,10 @@ public class ChatListFragment extends Fragment {
     final static int session = (int)Math.round(DChronoChat.getNowMilliseconds() / 1000.0);
     private ArrayList<HashMap<String, Face>> m_faceList = new ArrayList<HashMap<String, Face>>();
     private ChatAdapter mChatAdapter;
+    private String routerIP;
 
 
-    public static ChatListFragment newInstance(String screenName, String userName, String hubPrefix, String chatRoom) {
+    public static ChatListFragment newInstance(String screenName, String userName, String hubPrefix, String chatRoom, String routerIP) {
         ChatListFragment fragment = new ChatListFragment();
 
         //Get the argument from MainActivity calling this fragment
@@ -72,6 +73,7 @@ public class ChatListFragment extends Fragment {
         args.putString("userName", userName);
         args.putString("hubPrefix", hubPrefix);
         args.putString("chatRoom", chatRoom);
+        args.putString("routerIP", routerIP);
         fragment.setArguments(args);
 
         return fragment;
@@ -98,8 +100,10 @@ public class ChatListFragment extends Fragment {
         hubPrefix = args.getString("hubPrefix", "/ndn/clab/USER");
         chatRoom = args.getString("chatRoom", "testRoom");
 
+        routerIP = args.getString("routerIP", "152.118.101.84");
+
         mMessageList = new ArrayList<ChatMessage>();
-        mChronoWorker = new ChronoWorker(screenName, userName, hubPrefix, chatRoom, getContext());
+        mChronoWorker = new ChronoWorker(screenName, userName, hubPrefix, chatRoom, routerIP, getContext());
         mChronoWorker.prepareWorker();
         mChronoWorker.start();
 
@@ -175,14 +179,16 @@ public class ChatListFragment extends Fragment {
         private boolean isConnect=false;
         private boolean isReady = false;
         private static final String CW_LOG_TAG = "ChronoWorker";
+        private String mRouterIP;
 
-        public ChronoWorker(String screenName, String userName, String hubPrefix, String chatRoom, Context context)
+        public ChronoWorker(String screenName, String userName, String hubPrefix, String chatRoom, String routerIP, Context context)
         {
             mScreenName = screenName;
             mUserName = userName;
             mHubPrefix = hubPrefix;
             mChatRoom = chatRoom;
             mContext = context;
+            mRouterIP = routerIP;
             Log.i(CW_LOG_TAG, "ChronoWorker Starts!");
         }
 
@@ -208,7 +214,7 @@ public class ChatListFragment extends Fragment {
             try
             {
                 //Create new face
-                face = new Face("localhost");
+                face = new Face(mRouterIP);
 
                 MemoryIdentityStorage identityStorage = new MemoryIdentityStorage();
                 MemoryPrivateKeyStorage privateKeyStorage = new MemoryPrivateKeyStorage();

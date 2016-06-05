@@ -62,7 +62,7 @@ public class LoginActivity extends AppCompatActivity  {
         mScreenName = (EditText) findViewById(R.id.editScreenName);
         mUserName = (AutoCompleteTextView) findViewById(R.id.editUserName);
         mHubPrefix = (EditText) findViewById(R.id.editHubPrefix);
-        mHubPrefix.setText("ndn/edu/ucla/remap");
+        mHubPrefix.setText("ndn/ui/clab/");
 
         Bundle extras = getIntent().getExtras();
         if (extras != null){

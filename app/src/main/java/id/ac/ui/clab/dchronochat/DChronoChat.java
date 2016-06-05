@@ -77,7 +77,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         // This should only be called once, so get the random string here.
 
         session = (int)Math.round(getNowMilliseconds() / 1000.0);
-        this.userName = screenName + session;
+        this.userName = screenName; // + session;
         identityName = new Name(hubPrefix).append(this.userName); //identity to append to chatprefix
         // TODO see the effect of adding CHATCHANNEL and SESSION to chatPrefix
         chatPrefix = new Name(identityName).append(chatRoom).append(String.valueOf(session)); //the prefix of this chat
@@ -370,8 +370,8 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             while (length < roster.size())
             {
                 String entry = (String)roster.get(length);
-                String tempName = entry.substring(0, entry.length() - 10);
-                long tempSessionNo = Long.parseLong(entry.substring(entry.length() - 10));
+                String tempName = entry.substring(0, entry.length());
+                long tempSessionNo = Long.parseLong(entry.substring(entry.length()));
                 if (!name.equals(tempName) && !content.getType().equals(ChatMessage.ChatMessageType.LEAVE))
                     ++length;
                 else {
