@@ -29,4 +29,8 @@ dependencies {
     compile('net.named-data:jndn-android:0.10') {
         exclude group: 'org.xerial'
     }
+    compile('com.intel.jndn.management:jndn-management:1.1.0') {
+        exclude group: 'net.named-data', module: 'jndn'
+    }
+    compile 'net.named-data.jndn-xx:jndn-xx-util:0.0.1'
 }

@@ -214,7 +214,7 @@ public class ChatListFragment extends Fragment {
             try
             {
                 //Create new face
-                face = new Face(mRouterIP);
+                face = new Face();
 
                 MemoryIdentityStorage identityStorage = new MemoryIdentityStorage();
                 MemoryPrivateKeyStorage privateKeyStorage = new MemoryPrivateKeyStorage();
@@ -281,7 +281,7 @@ public class ChatListFragment extends Fragment {
                         break;
 
                     face.processEvents();
-                    Thread.sleep(10);
+                    Thread.sleep(20);
                 }
 
             }

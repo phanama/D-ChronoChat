@@ -60,17 +60,21 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     private boolean isRecoverySyncState = true;
     private String tempName;
     private int session;
+    private String nameAndSession;
+
+    private long prefixID;
 
 
     public DChronoChat(String screenName, String userName, String chatRoom, Name hubPrefix,
                        Face face, KeyChain keyChain, Name certificateName, boolean requireVerification)
     {
+        Log.i(LOG_TAG, "DChronoChat Createed!");
         this.screenName = screenName; //The name on screen
         this.chatRoom = chatRoom; //chatroom name
         this.face = face;
         this.keyChain = keyChain;
         this.certificateName = certificateName;
-        heartbeat = new Heartbeat();
+        heartbeat = this.new Heartbeat();
         this.requireVerification = requireVerification;
         //this.userName = userName; //the email
 
@@ -78,6 +82,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
         session = (int)Math.round(getNowMilliseconds() / 1000.0);
         this.userName = screenName; // + session;
+        this.nameAndSession = userName + session;
         identityName = new Name(hubPrefix).append(this.userName); //identity to append to chatprefix
         // TODO see the effect of adding CHATCHANNEL and SESSION to chatPrefix
         chatPrefix = new Name(identityName).append(chatRoom).append(String.valueOf(session)); //the prefix of this chat
@@ -94,13 +99,19 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         }
 
         try {
-            face.registerPrefix(chatPrefix, this, RegisterFailed.onRegisterFailed);
+            prefixID = face.registerPrefix(chatPrefix, this, RegisterFailed.onRegisterFailed);
+            Log.i("Register:", chatPrefix.toString());
         } catch (IOException | SecurityException ex) {
             Log.e(LOG_TAG, "Exception : " + ex + " when registering prefix to face!");
             //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         // TODO : Add persistent storage for chats
+    }
+
+    public void chatEnd() {
+        face.removeRegisteredPrefix(prefixID);
+        face.shutdown();
     }
 
     // Send a chat message.
@@ -117,12 +128,12 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
             //Experimental
             ChatMessage.Builder builder = ChatMessage.newBuilder(); //builder to build chatmessage instance
-            CachedMessage message = (CachedMessage)messageCache.get(messageCache.size() - 1);
+            CachedMessage cachedMessage = (CachedMessage)messageCache.get(messageCache.size() - 1);
             builder.setFrom(screenName);
             builder.setTo(chatRoom);
-            builder.setType(message.getMessageType());
-            builder.setData(message.getMessage());
-            builder.setTimestamp((int)Math.round(message.getTime() / 1000.0));
+            builder.setType(cachedMessage.getMessageType());
+            builder.setData(cachedMessage.getMessage());
+            builder.setTimestamp((int)Math.round(cachedMessage.getTime() / 1000.0));
 
             ChatMessage content = builder.build();
             chatMessageList.add(content);
@@ -136,6 +147,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     {
         sync.publishNextSequenceNo();
         messageCacheAppend(ChatMessage.ChatMessageType.LEAVE, "xxx");
+        Log.i(LOG_TAG, "Leave!");
     }
 
     /**
@@ -197,7 +209,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             return;
         }
 
-        if (roster.indexOf(userName) < 0) {
+        if (roster.indexOf(this.nameAndSession) < 0) {
             join();
         }
     }
@@ -205,8 +217,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     //Send join message
     public void join()
     {
-        roster.add(userName);
-
+        roster.add(this.nameAndSession);
         Log.i(LOG_TAG, "Member: " + screenName);
         Log.i(LOG_TAG, screenName + ": Join");
         messageCacheAppend(ChatMessage.ChatMessageType.JOIN, "xxx");
@@ -226,17 +237,18 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         ArrayList<Long> sequenceNoList = new ArrayList<>(); // of long
         for (int j = 0; j < syncStates.size(); ++j)
         {
+            //see history
             ChronoSync2013.SyncState syncState = (ChronoSync2013.SyncState)syncStates.get(j);
             Name nameComponents = new Name(syncState.getDataPrefix());
             String tempSession = nameComponents.get(-1).toEscapedString();
             try {
-                tempName = URLDecoder.decode(nameComponents.get(identityName.size() - 1).toEscapedString(), "UTF-8");
+                tempName = URLDecoder.decode(nameComponents.get(-1).toEscapedString(), "UTF-8");
             }
             catch (UnsupportedEncodingException e)
             {
                 Log.e(LOG_TAG, "Encoding not supported");
             }
-            String tempFullName = tempName + tempSession;
+            //String tempFullName = tempName + tempSession;
 
             long sessionNo = syncState.getSessionNo();
             if (!tempName.equals(userName) || !tempSession.equals(session))
@@ -364,17 +376,17 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             long sessionNo = Long.parseLong(data.getName().get(-2).toEscapedString());
             long sequenceNo = Long.parseLong(data.getName().get(-1).toEscapedString());
             String nameAndSession = name + sessionNo;
-
             int length = 0;
             //update roster
             while (length < roster.size())
             {
                 String entry = (String)roster.get(length);
-                String tempName = entry.substring(0, entry.length());
-                long tempSessionNo = Long.parseLong(entry.substring(entry.length()));
+                String tempName = entry.substring(0, entry.length() - 10);
+                long tempSessionNo = Long.parseLong(entry.substring(entry.length() - 10));
                 if (!name.equals(tempName) && !content.getType().equals(ChatMessage.ChatMessageType.LEAVE))
                     ++length;
-                else {
+                else
+                {
                     if (name.equals(tempName) && sessionNo > tempSessionNo)
                         roster.set(length, nameAndSession);
                     break;
