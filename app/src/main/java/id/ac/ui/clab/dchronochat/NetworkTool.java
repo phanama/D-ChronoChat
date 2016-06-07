@@ -37,39 +37,48 @@ import java.util.Set;
 
 /**
  * Created by yuan on 16-4-30.
+ * Edited by yudiandrean on 7-6-2016
  *
  * Function: Acquire the IP address in a LAN
  */
 class NetworkTool {
-    private final static String PREFIX = "/ndn/broadcast/ChronoChat-0.3";
-    private Context m_ctx;
-    private String m_prefix = "/ndn/test/broadcast/ChronoChat-0.3";
+    private final static String PREFIX = "/ndn/broadcast/ChronoChat";
+    private Context mContext;
+    private String mPrefix = "/ndn/test/broadcast/ChronoChat";
     private static final String TAG = "CChat";
-    private String m_hubPrefix;
-    private String m_chatRoom;
+    private String mHubPrefix;
+    private String mChatRoom;
     private final ArrayList<HashMap<String, String>> m_faceList = new ArrayList<HashMap<String, String>>(); //[IP] sessionNo
-    private final String m_ping = "ping -c 1 -w 0.5 ";//Must end with an space
-    private final Runtime m_run = Runtime.getRuntime();
-    private String m_IP;
-    private NetThread m_netThread;
-    private int m_session;
+    private final String mPing = "ping -c 1 -w 0.5 ";//Must end with an space
+    private final Runtime mRun = Runtime.getRuntime();
+    private String mIP;
+    private NetThread mNetThread;
+    private int mSession;
+    private Name identityName;
+    private Name chatPrefix;
+    private String destinationIP;
 
-    public NetworkTool(Context ctx, String hubPrefix, String chatRoom, int session) {
-        //Log.i(TAG, "NetTool hubPrefix:" + hubPrefix + " chatRoom:" + chatRoom);
+    public NetworkTool(Context context, String hubPrefix, String chatRoom, String userName, int session, String ipAddress) {
+        Log.i(TAG, "NetTool hubPrefix:" + hubPrefix + " chatRoom:" + chatRoom);
 
-        this.m_ctx = ctx;
-        this.m_hubPrefix = hubPrefix;
-        this.m_chatRoom = chatRoom;
-        m_session = session;
-        m_IP = getLocAddr();
-        m_netThread = new NetThread();
-        m_netThread.start();
+        this.mContext = context;
+        this.mHubPrefix = hubPrefix;
+        this.mChatRoom = chatRoom;
+        mSession = session;
+        mIP = getLocAddr();
+        destinationIP = ipAddress;
+
+        identityName = new Name(hubPrefix).append(userName); //identity to append to chatprefix
+        chatPrefix = new Name(identityName).append(chatRoom).append(String.valueOf(session)); //the prefix of this chat
+
+        mNetThread = new NetThread();
+        mNetThread.start();
 
         HashMap<String, String>map = new HashMap<String, String>();
-        map.put(m_IP, String.valueOf(session));
+        map.put(mIP, String.valueOf(session));
         m_faceList.add(map);
 
-        Log.i(TAG, "m_IP: " + m_IP);
+        Log.i(TAG, "mIP: " + mIP);
 
 //        Toast.makeText(m_ctx, "create netTool!", Toast.LENGTH_LONG);
     }
@@ -78,17 +87,19 @@ class NetworkTool {
     public boolean sendMsg(String ip) {
         Face face = new Face(ip);
         Echo echo = new Echo();
-        Name name = new Name(m_prefix + "/" + System.currentTimeMillis() + "/000000" + m_hubPrefix
-                + "/111111" + m_chatRoom + "/222222/" + m_IP + "/333333/" + m_session);
+        Name name = new Name(mPrefix + "/" + System.currentTimeMillis() + "/000000" + mHubPrefix
+                + "/111111" + mChatRoom + "/222222/" + mIP + "/333333/" + mSession);
 
         try {
             face.expressInterest(name, echo, echo);
-            while (echo.getCallbackCount_() < 1) {
+            while (echo.getCallbackCount_() < 1)
+            {
                 face.processEvents();
                 Thread.sleep(5);
             }
         } catch (Exception exception) {
             Log.e(TAG, "Exception happend in sendMsg to " + ip);
+            Log.e(TAG, exception.toString());
             return false;
         }
 
@@ -99,11 +110,11 @@ class NetworkTool {
     }
 
     public void scan() {
-        final ProgressDialog proDlg = ProgressDialog.show(m_ctx, "", "waiting...");
+        final ProgressDialog proDlg = ProgressDialog.show(mContext, "", "waiting...");
         final String preAddress = getLocAddrIndex();
 
         if (preAddress.equals("")) {
-            Toast.makeText(m_ctx, "Please connect to the WIFI first.",
+            Toast.makeText(mContext, "Please connect to the WIFI first.",
                     Toast.LENGTH_LONG).show();
             return;
         }
@@ -113,23 +124,23 @@ class NetworkTool {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    Process proc = null;
+                    Process process = null;
                     try {
-                        String p = m_ping + preAddress + lastAddres;
+                        String p = mPing + preAddress + lastAddres;
                         String curIP = preAddress + lastAddres;
-                        proc = m_run.exec(p);
+                        process = mRun.exec(p);
 
-                        int result = proc.waitFor();
+                        int result = process.waitFor();
                         if (result == 0) {
-                            //Log.i(TAG, "Successfully connect to " + curIP);
-                            //if (sendMsg(curIP)) //!curIP.equals(m_IP) &&
-                            //Log.i(TAG, curIP + "has installed NFD.");
-                            sendMsg(curIP);
+                            Log.i(TAG, "Successfully connect to " + curIP);
+                            if (sendMsg(curIP)) //!curIP.equals(mIP) &&
+                            {Log.i(TAG, curIP + "has installed NFD.");}
+                            //sendMsg(curIP);
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Exception happened for " + e.getMessage());
                     } finally {
-                        proc.destroy();
+                        process.destroy();
                     }
                 }
             }).start();
@@ -144,20 +155,18 @@ class NetworkTool {
 
             }
         }, 30000);
-
     }
 
     public String getLocAddrIndex() {
 //        String str = getLocAddr();
-        //Log.i(TAG, "My IP:" + m_IP);
+        //Log.i(TAG, "My IP:" + mIP);
 
-        if (!m_IP.equals("")) {
+        if (!mIP.equals("")) {
             for (int i = 0; i < 256; i ++) {
-                //Log.i(TAG, m_IP.substring(0, m_IP.lastIndexOf(".") + 1));
-                return m_IP.substring(0, m_IP.lastIndexOf(".") + 1);
+                //Log.i(TAG, mIP.substring(0, mIP.lastIndexOf(".") + 1));
+                return mIP.substring(0, mIP.lastIndexOf(".") + 1);
             }
         }
-
         return null;
     }
 
@@ -170,6 +179,7 @@ class NetworkTool {
                 while (address.hasMoreElements()) {
                     InetAddress ip = (InetAddress)address.nextElement();
                     if (!ip.isLoopbackAddress() && !ip.isLinkLocalAddress())
+                        Log.i(TAG, "Got local address!" + ip.getHostAddress().toString());
                         return ip.getHostAddress().toString();
                 }
             }
@@ -224,8 +234,8 @@ class NetworkTool {
                     continue;
                 String[] tmpStrs = str.split("=");
                 //Log.i(TAG, str);
-//                for (String str1: tmpStrs)
-//                    Log.i(TAG, "    tmpStr:" + str1);
+                for (String str1: tmpStrs)
+                    Log.i(TAG, "    tmpStr:" + str1);
 
                 boolean isExist = false;
                 for (int i = 0; i < m_faceList.size(); ++ i) {
@@ -239,7 +249,7 @@ class NetworkTool {
 
                         //replace and update
                         m_faceList.remove(tmpMap);
-                        //Log.i(TAG, "remove tmpMap: " + tmpMap);
+                        Log.i(TAG, "remove tmpMap: " + tmpMap);
                         HashMap<String,String> itemMap = new HashMap<String, String>();
                         itemMap.put(tmpStrs[0], tmpStrs[1]);
                         m_faceList.add(itemMap);
@@ -265,18 +275,18 @@ class NetworkTool {
                 }
             }
 
-//            for (int i = 0; i < m_faceList.size(); ++ i) {
-//                //Log.i(TAG, "m_faceList[" + i + "]" + m_faceList.get(i));
-//            }
+            for (int i = 0; i < m_faceList.size(); ++ i) {
+                Log.i(TAG, "m_faceList[" + i + "]" + m_faceList.get(i));
+            }
         }
 
         private void registerBroadcastPrefix(String str) {
-            //Log.i(TAG, "FaceUri:" + str + " prefix:" + (new Name(PREFIX + m_chatRoom)).toString());
+            Log.i(TAG, "FaceUri:" + str + " prefix:" + (new Name(PREFIX + mChatRoom)).toString());
 
             NfdcHelper nfdcHelper = new NfdcHelper();
             try {
                 int faceID = nfdcHelper.faceCreate("tcp4://" + str);
-                nfdcHelper.ribRegisterPrefix(new Name(PREFIX + m_chatRoom), faceID,
+                nfdcHelper.ribRegisterPrefix(new Name(PREFIX + mChatRoom), faceID,
                         10, true, false);
             }
             catch (FaceUri.CanonizeError e) {
@@ -351,7 +361,7 @@ class NetworkTool {
             Log.i(TAG, ">> targetIP:" + targetIP);
             Log.i(TAG, ">> targetSession:" + targetSession);
 
-            if (hubPrefix.equals(m_hubPrefix) && chatRoom.equals(m_chatRoom)) {
+            if (hubPrefix.equals(mHubPrefix) && chatRoom.equals(mChatRoom)) {
 //                m_faceList.add(targetIP);
 //                registerBroadcastPrefix(targetIP);
                 //establish remoteFace:targetIP, register "/ndn/broadcast/ChronoChat-0.3/" + chatRoom
@@ -438,9 +448,9 @@ class NetworkTool {
                 netFace_.setCommandSigningInfo(keyChain, certificateName);
 
                 Echo echo = new Echo(keyChain, certificateName);
-                Name prefix = new Name(m_prefix);
+                Name prefix = new Name(mPrefix);
                 netFace_.registerPrefix(prefix, echo, echo);
-                //Log.i(TAG, "Register prefix  " + prefix.toUri());
+                Log.i(TAG, "Register prefix  " + prefix.toUri());
 
                 // The main event loop.
                 // Wait to receive one interest for the prefix.

@@ -59,9 +59,10 @@ public class ChatListFragment extends Fragment {
     private EditText mInputText;
     private final static int MAXLEN = 1000;
     final static int session = (int)Math.round(DChronoChat.getNowMilliseconds() / 1000.0);
-    private ArrayList<HashMap<String, Face>> m_faceList = new ArrayList<HashMap<String, Face>>();
+    private ArrayList<HashMap<String, Face>> mFaceList = new ArrayList<HashMap<String, Face>>();
     private ChatAdapter mChatAdapter;
-    private String routerIP;
+    private String mRouterIP;
+    private NetworkTool mNetworkTool;
 
 
     public static ChatListFragment newInstance(String screenName, String userName, String hubPrefix, String chatRoom, String routerIP) {
@@ -100,10 +101,10 @@ public class ChatListFragment extends Fragment {
         hubPrefix = args.getString("hubPrefix", "/ndn/clab/USER");
         chatRoom = args.getString("chatRoom", "testRoom");
 
-        routerIP = args.getString("routerIP", "152.118.101.84");
+        mRouterIP = args.getString("routerIP", "152.118.101.84");
 
         mMessageList = new ArrayList<ChatMessage>();
-        mChronoWorker = new ChronoWorker(screenName, userName, hubPrefix, chatRoom, routerIP, getContext());
+        mChronoWorker = new ChronoWorker(screenName, userName, hubPrefix, chatRoom, mRouterIP, getContext());
         mChronoWorker.prepareWorker();
         mChronoWorker.start();
 
@@ -111,6 +112,10 @@ public class ChatListFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(activity));
         mChatAdapter = new ChatAdapter(this.getActivity(), mMessageList);
         recyclerView.setAdapter(mChatAdapter);
+
+        //Find all devices installed in the same LAN
+        mNetworkTool = new NetworkTool(getContext(), hubPrefix, chatRoom, userName, session, mRouterIP);
+        mNetworkTool.scan();
 
         mInputText = (EditText) view.findViewById(R.id.inputText);
         mSendButton = (Button) view.findViewById(R.id.sendButton);
