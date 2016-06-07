@@ -115,7 +115,7 @@ public class ChatListFragment extends Fragment {
 
         //Find all devices installed in the same LAN
         mNetworkTool = new NetworkTool(getContext(), hubPrefix, chatRoom, userName, session, mRouterIP);
-        mNetworkTool.scan();
+        //mNetworkTool.scan();
 
         mInputText = (EditText) view.findViewById(R.id.inputText);
         mSendButton = (Button) view.findViewById(R.id.sendButton);

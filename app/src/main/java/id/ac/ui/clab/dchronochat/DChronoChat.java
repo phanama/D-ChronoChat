@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
@@ -52,7 +53,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     private final OnTimeout heartbeat;
     private final boolean requireVerification;
     private Name identityName;
-
+    private final ArrayList<HashMap<String, String>> mSequence = new ArrayList<HashMap<String, String>>();
     private ArrayList messageCache = new ArrayList(); // of CachedMessage
     private ArrayList<ChatMessage> chatMessageList = new ArrayList(); // of All ChatMessage
     private ArrayList roster = new ArrayList(); //TODO change from arraylist to map
@@ -60,7 +61,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     private boolean isRecoverySyncState = true;
     private String tempName;
     private int session;
-    private String nameAndSession;
+    private String mNameAndSession;
 
     private long prefixID;
 
@@ -82,7 +83,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
         session = (int)Math.round(getNowMilliseconds() / 1000.0);
         this.userName = screenName; // + session;
-        this.nameAndSession = userName + session;
+        this.mNameAndSession = userName + session;
         identityName = new Name(hubPrefix).append(this.userName); //identity to append to chatprefix
         // TODO see the effect of adding CHATCHANNEL and SESSION to chatPrefix
         chatPrefix = new Name(identityName).append(chatRoom).append(String.valueOf(session)); //the prefix of this chat
@@ -209,7 +210,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             return;
         }
 
-        if (roster.indexOf(this.nameAndSession) < 0) {
+        if (roster.indexOf(this.mNameAndSession) < 0) {
             join();
         }
     }
@@ -217,10 +218,14 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     //Send join message
     public void join()
     {
-        roster.add(this.nameAndSession);
+        roster.add(this.mNameAndSession);
         Log.i(LOG_TAG, "Member: " + screenName);
         Log.i(LOG_TAG, screenName + ": Join");
         messageCacheAppend(ChatMessage.ChatMessageType.JOIN, "xxx");
+
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put(mNameAndSession, String.valueOf(0));
+        mSequence.add(map);
     }
 
     // sendInterest: Send a Chat Interest to fetch chat messages after the
@@ -240,7 +245,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             //see history
             ChronoSync2013.SyncState syncState = (ChronoSync2013.SyncState)syncStates.get(j);
             Name nameComponents = new Name(syncState.getDataPrefix());
-            String tempSession = nameComponents.get(-1).toEscapedString();
+            //String tempSession = nameComponents.get(-1).toEscapedString();
             try {
                 tempName = URLDecoder.decode(nameComponents.get(-1).toEscapedString(), "UTF-8");
             }
@@ -251,7 +256,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             //String tempFullName = tempName + tempSession;
 
             long sessionNo = syncState.getSessionNo();
-            if (!tempName.equals(userName) || !tempSession.equals(session))
+            if (!tempName.equals(screenName))
             {
                 int index = -1;
                 for (int k = 0; k < sendList.size(); ++k) {
@@ -301,13 +306,15 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
      InterestFilter filter)
     {
         Log.i("OnInterest", "Got New Interest!");
+        Log.i("OnInterest", interest.toUri());
         ChatMessage.Builder builder = ChatMessage.newBuilder(); //builder to build chatmessage instance
 
         long sequenceNo = Long.parseLong(interest.getName().get(chatPrefix.size() + 1).toEscapedString());
         boolean gotContent = false;
 
         //Find the right chat message in messageCache
-        for (int i = messageCache.size() - 1; i >= 0; --i) {
+        for (int i = messageCache.size() - 1; i >= 0; --i)
+        {
             CachedMessage message = (CachedMessage)messageCache.get(i);
             if (message.getSequenceNo() == sequenceNo) {
                 if (!message.getMessageType().equals(ChatMessage.ChatMessageType.CHAT)) {
