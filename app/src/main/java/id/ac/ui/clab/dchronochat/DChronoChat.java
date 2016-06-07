@@ -384,21 +384,28 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             long sequenceNo = Long.parseLong(data.getName().get(-1).toEscapedString());
             Log.i("Content details: " , "name: " + name
                     + " | prefix : " + prefix + " | sessionNo: " + sessionNo +
-                    " | sequenceNo: " + sequenceNo);
+                    " | sequenceNo: " + sequenceNo + " | MessageType: " + content.getType().toString() +
+                     " | Data: " + content.getData());
             String nameAndSession = name + sessionNo;
             int length = 0;
-            //update roster
+
+            //check roster
             while (length < roster.size())
             {
                 String entry = (String)roster.get(length);
                 String tempName = entry.substring(0, entry.length()-10);
                 long tempSessionNo = Long.parseLong(entry.substring(entry.length() - 10));
-                Log.i("Check Rosterr:", "roster[" + length + "] | tempname:" + tempName + " | tempsession:" + tempSessionNo
-                        + " | MessageType: " + content.getType().toString());
+                Log.i("Check Rosterr:", "roster[" + length + "] | tempname:" + tempName + " | tempsession:" + tempSessionNo);
                 if (!name.equals(tempName) && !content.getType().equals(ChatMessage.ChatMessageType.LEAVE))
                 {
                     ++length;
                 }
+                //bugfix for broadcasted HELLO message from self
+                if (name.equals(tempName) && content.getType().equals(ChatMessage.ChatMessageType.HELLO))
+                {
+                    break;
+                }
+
                 else
                 {
                     if (name.equals(tempName) && sessionNo > tempSessionNo)
@@ -420,27 +427,37 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             int i;
             for (i=0; i < mSequence.size(); ++i)
             {
+
                 HashMap<String, String> map = mSequence.get(i);
                 if (map.containsKey(nameAndSession))
                 {
-                    Log.i("Map Debug:", "Map Debug: " + map.toString() + " contains key: " + nameAndSession);
+
                     String mapSequence = map.get(nameAndSession);
-                    if (mapSequence.compareTo(String.valueOf(sequenceNo)) >= 0) {
+                    Log.i("Map Debug:", "Map Debug: " + map.toString() + " contains key: " + nameAndSession + " | Map Sequence: "
+                    + mapSequence);
+
+                    //if (mapSequence.compareTo(String.valueOf(sequenceNo)) >= 0)
+                    //fix bug if sequence reaches 10
+                    if (Long.valueOf(mapSequence) >
+                            sequenceNo)
+                    {
+
                         isPrint = false;
+                        Log.i(LOG_TAG, "isPrint : is false!" );
                         break;
                     }
 
                     HashMap<String, String> tmpMap = new HashMap<String, String>();
                     tmpMap.put(nameAndSession, String.valueOf(sequenceNo));
                     mSequence.set(i, tmpMap);
-//                        //sendDebugMsg("tmpMap: " + tmpMap.toString());
+                        Log.i(LOG_TAG, "tmpMap: " + tmpMap.toString());
                 }
             }
             if (i >= mSequence.size()) {
                 HashMap<String, String> tmpMap = new HashMap<String, String>();
                 tmpMap.put(nameAndSession, String.valueOf(sequenceNo));
                 mSequence.add(tmpMap);
-//                    //sendDebugMsg("sequence_ add new item: " + tmpMap);
+                Log.i(LOG_TAG, "sequence_ add new item: " + tmpMap);
             }
 
 
@@ -479,7 +496,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                     HashMap<String, String> map = mSequence.get(j);
                     if (map.containsKey(nameAndSession) && !nameAndSession.contains(screenName)) {
                         mSequence.remove(i);
-                        //sendDebugMsg("remove sequence_ item: " + map.toString());
+                        Log.i(LOG_TAG, "remove sequence_ item: " + map.toString());
                         break;
                     }
                 }
@@ -527,7 +544,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                 messageCacheAppend(ChatMessage.ChatMessageType.JOIN, "xxx");
             try {
                 sync.publishNextSequenceNo();
-                Log.i("Hearbeat", "Published new sequence");
+                Log.v("Hearbeat", "Published new sequence");
             } catch (IOException | SecurityException ex) {
                 Log.e(LOG_TAG, "Exception : " + ex + " when publishing new sequence!");
                 //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
@@ -546,6 +563,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                 Log.e(LOG_TAG, "Exception : " + ex + " when expressing Heartbeat!");
                 //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
             }
+            messageCacheAppend(ChatMessage.ChatMessageType.HELLO, "xxx");
         }
     }
     
