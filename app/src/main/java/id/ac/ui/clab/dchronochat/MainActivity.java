@@ -3,6 +3,7 @@ package id.ac.ui.clab.dchronochat;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -19,6 +20,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+
+import net.named_data.jndn.Name;
+import net.named_data.jndn_xx.util.FaceUri;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +32,9 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
+    /** Reference to the most recent AsyncTask that was created for listing routes */
+    private RouteCreateAsyncTask m_routeCreateAsyncTask;
+
     private SharedPreferences mSharedPrefs;
     private Button startChat;
     private EditText editRouterIP; //edittext to inssert router IP
@@ -36,6 +45,8 @@ public class MainActivity extends AppCompatActivity
     private String mRouterIP;
     private static final String IPADDRESS_PATTERN =
             "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
+    /** Progress bar spinner to display to user when destroying faces */
+    private ProgressBar m_reloadingListProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +55,9 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main_page);
         startChat = (Button) findViewById(R.id.startButton);
         editRouterIP = (EditText) findViewById(R.id.editRouterIP);
+
+        // Get progress bar spinner view
+        m_reloadingListProgressBar = (ProgressBar) findViewById(R.id.route_list_reloading_list_progress_bar);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -94,6 +108,9 @@ public class MainActivity extends AppCompatActivity
                     }
                     else if (isIPValid(mRouterIP))
                     {
+                        String faceUri = "tcp://" + mRouterIP;
+                        Name globalPrefix = new Name("/ndn/");
+                        createRoute(globalPrefix, faceUri);
                         // During initial setup, plug in the details fragment.
                         ChatListFragment details = new ChatListFragment();
                         details.setArguments(getIntent().getExtras());
@@ -188,5 +205,78 @@ public class MainActivity extends AppCompatActivity
         Pattern pattern = Pattern.compile(IPADDRESS_PATTERN);
         Matcher matcher = pattern.matcher(IP);
         return matcher.find();
+    }
+
+    private class RouteCreateAsyncTask extends AsyncTask<Void, Void, String> {
+        public
+        RouteCreateAsyncTask(Name prefix, String faceUri)
+        {
+            m_prefix = prefix;
+            m_faceUri = faceUri;
+        }
+
+        @Override
+        protected String
+        doInBackground(Void... params)
+        {
+            NfdcHelper nfdcHelper = new NfdcHelper();
+            try {
+                int faceId = nfdcHelper.faceCreate(m_faceUri);
+                nfdcHelper.ribRegisterPrefix(new Name(m_prefix), faceId, 10, true, false);
+                nfdcHelper.shutdown();
+                return "OK";
+            }
+            catch (FaceUri.CanonizeError e) {
+                return "Error creating face (" + e.getMessage() + ")";
+            }
+            catch (FaceUri.Error e) {
+                return "Error creating face (" + e.getMessage() + ")";
+            }
+            catch (Exception e) {
+                return "Error communicating with NFD (" + e.getMessage() + ")";
+            }
+            finally {
+                nfdcHelper.shutdown();
+            }
+        }
+
+        @Override
+        protected void
+        onPreExecute()
+        {
+            // Display progress bar
+            m_reloadingListProgressBar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected void
+        onPostExecute(String status)
+        {
+            // Display progress bar
+            m_reloadingListProgressBar.setVisibility(View.VISIBLE);
+            Toast.makeText(getApplicationContext(), status, Toast.LENGTH_LONG).show();
+
+            //retrieveRouteList();
+        }
+
+        @Override
+        protected void
+        onCancelled()
+        {
+            // Remove progress bar
+            m_reloadingListProgressBar.setVisibility(View.GONE);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+
+        private Name m_prefix;
+        private String m_faceUri;
+    }
+
+    public void
+    createRoute(Name prefix, String faceUri)
+    {
+        m_routeCreateAsyncTask = new RouteCreateAsyncTask(prefix, faceUri);
+        m_routeCreateAsyncTask.execute();
     }
 }

@@ -260,8 +260,7 @@ public class ChatListFragment extends Fragment {
                         dChronoChat.sendMessage(input);
                     }
                     face.processEvents();
-                    //Experimental
-                    Thread.sleep(5);
+
                     mMessageList = dChronoChat.getChatList();
                     getActivity().runOnUiThread(new Runnable(){
                         @Override
@@ -271,7 +270,7 @@ public class ChatListFragment extends Fragment {
                         }
                     });
                     // We need to sleep for a few milliseconds so we don't use 100% of the CPU.
-                    Thread.sleep(10);
+                    Thread.sleep(25);
                 }
 
                 // The user entered the command to leave.
@@ -282,11 +281,11 @@ public class ChatListFragment extends Fragment {
 
                 while (true)
                 {
-                    if (DChronoChat.getNowMilliseconds() - startTime >= 1000.0)
+                    if (DChronoChat.getNowMilliseconds() - startTime >= 2000.0)
                         break;
 
                     face.processEvents();
-                    Thread.sleep(20);
+                    Thread.sleep(35);
                 }
 
             }

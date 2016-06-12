@@ -115,19 +115,20 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         face.shutdown();
     }
 
-    // Send a chat message.
+    // Send a chat message by appending it to messagecache
     public final void
     sendMessage(String chatMessage) throws IOException, SecurityException
     {
         if (messageCache.size() == 0)
             messageCacheAppend(ChatMessage.ChatMessageType.JOIN, "xxx");
+
         // Ignore an empty message.
         // forming Sync Data Packet.
         if (!chatMessage.equals("")) {
             sync.publishNextSequenceNo();
             messageCacheAppend(ChatMessage.ChatMessageType.CHAT, chatMessage);
 
-            //Experimental
+            //add the chat message to view list
             ChatMessage.Builder builder = ChatMessage.newBuilder(); //builder to build chatmessage instance
             CachedMessage cachedMessage = (CachedMessage)messageCache.get(messageCache.size() - 1);
             builder.setFrom(screenName);
@@ -148,7 +149,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     {
         sync.publishNextSequenceNo();
         messageCacheAppend(ChatMessage.ChatMessageType.LEAVE, "xxx");
-        Log.i(LOG_TAG, "Leave!");
+        Log.i(LOG_TAG, "I am Leaving!");
     }
 
     /**
@@ -168,7 +169,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     // Generate a random name for ChronoSync.
     private static String getRandomString()
     {
-        String seed = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM012345678a9";
+        String seed = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM012345678avb9" + String.valueOf(getNowMilliseconds());
         String result = "";
         Random random = new Random();
         for (int i = 0; i < 10; ++i) {
@@ -219,7 +220,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     public void join()
     {
         roster.add(this.mNameAndSession);
-        Log.i(LOG_TAG, "Member: " + screenName);
+        Log.i(LOG_TAG, "I am: " + screenName);
         Log.i(LOG_TAG, screenName + ": Join");
         messageCacheAppend(ChatMessage.ChatMessageType.JOIN, "xxx");
 
@@ -236,6 +237,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     {
         // This is used by onData to decide whether to display the chat messages.
         isRecoverySyncState = isRecovery;
+        Log.i(LOG_TAG, "isRecovery state: " + String.valueOf(isRecovery));
 
         ArrayList sendList = new ArrayList(); // of String
         ArrayList<Long> sessionNoList = new ArrayList<>(); // of long
@@ -284,6 +286,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         {
             String uri = (String)sendList.get(i) + "/" + (long)sessionNoList.get(i) +
                     "/" + (long)sequenceNoList.get(i);
+            Log.i("Send URI :", "Send URI : " + uri);
             Interest interest = new Interest(new Name(uri));
             interest.setInterestLifetimeMilliseconds(syncLifetime);
             try {
@@ -377,7 +380,9 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
-        if (getNowMilliseconds() - content.getTimestamp() * 1000.0 < 120000.0) {
+
+        //using 180secs difference
+        if (getNowMilliseconds() - content.getTimestamp() * 1000.0 < 200000.0) {
             String name = content.getFrom(); //get sender's screenName
             String prefix = data.getName().getPrefix(-2).toUri(); //get sender's prefix
             long sessionNo = Long.parseLong(data.getName().get(-2).toEscapedString());
@@ -400,9 +405,11 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                 {
                     ++length;
                 }
+
                 //bugfix for broadcasted HELLO message from self
-                if (name.equals(tempName) && content.getType().equals(ChatMessage.ChatMessageType.HELLO))
+                else if (name.equals(tempName) && content.getType().equals(ChatMessage.ChatMessageType.HELLO))
                 {
+                    Log.i(LOG_TAG, "Roster | " + tempName + " | " + content.getType().toString());
                     break;
                 }
 
@@ -482,6 +489,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                 Log.i("Content from...", content.getFrom() + ": " + content.getData());
                 chatMessageList.add(content);
             }
+
             else if (content.getType().equals(ChatMessage.ChatMessageType.LEAVE)) {
                 // leave message
                 int n = roster.indexOf(nameAndSession);
@@ -526,6 +534,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     private static class ChatTimeout implements OnTimeout {
         public final void
         onTimeout(Interest interest) {
+
             System.out.println("Timeout waiting for chat data");
         }
 
@@ -563,7 +572,6 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                 Log.e(LOG_TAG, "Exception : " + ex + " when expressing Heartbeat!");
                 //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
             }
-            messageCacheAppend(ChatMessage.ChatMessageType.HELLO, "xxx");
         }
     }
     

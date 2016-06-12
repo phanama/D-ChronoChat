@@ -54,6 +54,13 @@
                 android:layout_below="@+id/startButton"
                 android:hint="Router IP Address"
                 android:layout_centerHorizontal="true" />
+
+            <ProgressBar
+                android:id="@+id/route_list_reloading_list_progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
         </GridLayout>
 
         <android.support.design.widget.FloatingActionButton
