@@ -270,7 +270,7 @@ public class ChatListFragment extends Fragment {
                         }
                     });
                     // We need to sleep for a few milliseconds so we don't use 100% of the CPU.
-                    Thread.sleep(25);
+                    Thread.sleep(10);
                 }
 
                 // The user entered the command to leave.
@@ -285,7 +285,7 @@ public class ChatListFragment extends Fragment {
                         break;
 
                     face.processEvents();
-                    Thread.sleep(35);
+                    Thread.sleep(15);
                 }
 
             }

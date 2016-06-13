@@ -237,7 +237,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     {
         // This is used by onData to decide whether to display the chat messages.
         isRecoverySyncState = isRecovery;
-        Log.i(LOG_TAG, "isRecovery state: " + String.valueOf(isRecovery));
+        Log.i(LOG_TAG, "Got sync state! | isRecovery state: " + String.valueOf(isRecovery));
 
         ArrayList sendList = new ArrayList(); // of String
         ArrayList<Long> sessionNoList = new ArrayList<>(); // of long
@@ -247,9 +247,12 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             //see history
             ChronoSync2013.SyncState syncState = (ChronoSync2013.SyncState)syncStates.get(j);
             Name nameComponents = new Name(syncState.getDataPrefix());
+            Log.i(LOG_TAG, "Full data name for index " + j + " : " + syncState.getDataPrefix() );
             //String tempSession = nameComponents.get(-1).toEscapedString();
             try {
-                tempName = URLDecoder.decode(nameComponents.get(-1).toEscapedString(), "UTF-8");
+                tempName = URLDecoder.decode(nameComponents.get(-3).toEscapedString(), "UTF-8");
+                Log.i(LOG_TAG, "Sync state for data name: " + tempName);
+                Log.i(LOG_TAG, "Current screenName: " + screenName);
             }
             catch (UnsupportedEncodingException e)
             {
@@ -284,13 +287,20 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
         for (int i = 0; i < sendList.size(); ++i)
         {
-            String uri = (String)sendList.get(i) + "/" + (long)sessionNoList.get(i) +
-                    "/" + (long)sequenceNoList.get(i);
-            Log.i("Send URI :", "Send URI : " + uri);
+            String uri = (String)sendList.get(i) + "/" +  (long)sequenceNoList.get(i);
+
+            Log.i("Send URI :", "Send URI : " + uri + " | Sendlist uri : " + sendList.get(i) + " | "
+                    + "Sequence no: " + sequenceNoList.get(i));
+
+            //String uri = (String)sendList.get(i) + "/" + (long)sessionNoList.get(i) +
+            //        "/" + (long)sequenceNoList.get(i);
+            //Log.i("Send URI :", "Send URI : " + uri + " | Sendlist uri : " + sendList.get(i) + " | " + "Session : " +
+            //        sessionNoList.get(i) + " | Sequence no: " + sequenceNoList.get(i));
             Interest interest = new Interest(new Name(uri));
             interest.setInterestLifetimeMilliseconds(syncLifetime);
             try {
                 face.expressInterest(interest, this, ChatTimeout.onTimeout);
+                Log.i(LOG_TAG, "Sent Interest : " + interest.getName());
             }
             catch (IOException ex)
             {
@@ -311,8 +321,11 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         Log.i("OnInterest", "Got New Interest!");
         Log.i("OnInterest", interest.toUri());
         ChatMessage.Builder builder = ChatMessage.newBuilder(); //builder to build chatmessage instance
+        Log.i(LOG_TAG, "Name : " + interest.getName() + " | Chatprefix : " + chatPrefix);
+        long sequenceNo = Long.parseLong(interest.getName().get(chatPrefix.size()).toEscapedString());
 
-        long sequenceNo = Long.parseLong(interest.getName().get(chatPrefix.size() + 1).toEscapedString());
+        Log.i(LOG_TAG, "Sequence Number : " + sequenceNo);
+
         boolean gotContent = false;
 
         //Find the right chat message in messageCache
@@ -353,6 +366,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             }
             try {
                 face.putData(data);
+                Log.i(LOG_TAG, "Sent Data : " + data.getName());
             } catch (IOException ex) {
                 Log.e(LOG_TAG, "IOException : " + ex + " when putting Chat Data to Face!");
                 //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
@@ -382,7 +396,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         }
 
         //using 180secs difference
-        if (getNowMilliseconds() - content.getTimestamp() * 1000.0 < 200000.0) {
+        if (getNowMilliseconds() - content.getTimestamp() * 1000.0 < 180000.0) {
             String name = content.getFrom(); //get sender's screenName
             String prefix = data.getName().getPrefix(-2).toUri(); //get sender's prefix
             long sessionNo = Long.parseLong(data.getName().get(-2).toEscapedString());
@@ -561,13 +575,13 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             }
             messageCacheAppend(ChatMessage.ChatMessageType.HELLO, "xxx");
 
-            // Call again after joining.
+
             // TODO: Are we sure using a "/local/timeout" interest is the best future call approach?
             Interest timeout = new Interest(new Name("/local/timeout"));
             timeout.setInterestLifetimeMilliseconds(60000);
             try {
                 face.expressInterest(timeout, DummyOnData.onData, heartbeat);
-                Log.i("Hearbeat", "Published new sequence2");
+                Log.i("Hearbeat", "Create heartbeat again");
             } catch (IOException ex) {
                 Log.e(LOG_TAG, "Exception : " + ex + " when expressing Heartbeat!");
                 //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
