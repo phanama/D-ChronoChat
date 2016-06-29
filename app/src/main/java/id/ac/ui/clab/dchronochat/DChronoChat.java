@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  */
 
 
-public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013.OnReceivedSyncState, OnData, OnInterestCallback {
+public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013.OnReceivedSyncState, OnData, OnInterestCallback, OnTimeout {
 
     private static final String LOG_TAG = "DChronoChat";
     private final String screenName; //the screen name of the user
@@ -62,6 +62,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     private String tempName;
     private int session;
     private String mNameAndSession;
+    private ArrayList <String> latency = new ArrayList<>();
 
     private long prefixID;
 
@@ -104,7 +105,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             Log.i("Register:", chatPrefix.toString());
         } catch (IOException | SecurityException ex) {
             Log.e(LOG_TAG, "Exception : " + ex + " when registering prefix to face!");
-            //Logger.getLogger(DChronoChat.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(DChronoChat.class.getadd neqame()).log(Level.SEVERE, null, ex);
         }
 
         // TODO : Add persistent storage for chats
@@ -126,6 +127,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         // forming Sync Data Packet.
         if (!chatMessage.equals("")) {
             sync.publishNextSequenceNo();
+            Log.i(LOG_TAG, "Current sequence to send: " + sync.getSequenceNo());
             messageCacheAppend(ChatMessage.ChatMessageType.CHAT, chatMessage);
 
             //add the chat message to view list
@@ -135,7 +137,8 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             builder.setTo(chatRoom);
             builder.setType(cachedMessage.getMessageType());
             builder.setData(cachedMessage.getMessage());
-            builder.setTimestamp((int)Math.round(cachedMessage.getTime() / 1000.0));
+            builder.setTimestamp(cachedMessage.getTime());
+            builder.setSequence(cachedMessage.getSequenceNo());
 
             ChatMessage content = builder.build();
             chatMessageList.add(content);
@@ -186,8 +189,8 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
      * @return  The current time in milliseconds since 1/1/1970, including
      * fractions of a millisecond.
      */
-    public static double
-    getNowMilliseconds() { return (double)System.currentTimeMillis(); }
+    public static long
+    getNowMilliseconds() { return System.currentTimeMillis(); }
 
     // initial: push the JOIN message in to the messageCache, update roster and
     // start the heartbeat.
@@ -247,7 +250,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             //see history
             ChronoSync2013.SyncState syncState = (ChronoSync2013.SyncState)syncStates.get(j);
             Name nameComponents = new Name(syncState.getDataPrefix());
-            Log.i(LOG_TAG, "Full data name for index " + j + " : " + syncState.getDataPrefix() );
+            Log.i(LOG_TAG, "Full data name for index " + j + " : " + syncState.getDataPrefix() + "/" + syncState.getSequenceNo() );
             //String tempSession = nameComponents.get(-1).toEscapedString();
             try {
                 tempName = URLDecoder.decode(nameComponents.get(-3).toEscapedString(), "UTF-8");
@@ -264,7 +267,8 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             if (!tempName.equals(screenName))
             {
                 int index = -1;
-                for (int k = 0; k < sendList.size(); ++k) {
+                for (int k = 0; k < sendList.size(); ++k)
+                {
                     if ((sendList.get(k)).equals(syncState.getDataPrefix()))
                     {
                         index = k;
@@ -299,7 +303,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
             Interest interest = new Interest(new Name(uri));
             interest.setInterestLifetimeMilliseconds(syncLifetime);
             try {
-                face.expressInterest(interest, this, ChatTimeout.onTimeout);
+                face.expressInterest(interest, this, this);
                 Log.i(LOG_TAG, "Sent Interest : " + interest.getName());
             }
             catch (IOException ex)
@@ -337,14 +341,17 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                     builder.setFrom(screenName);
                     builder.setTo(chatRoom);
                     builder.setType(message.getMessageType());
-                    builder.setTimestamp((int)Math.round(message.getTime() / 1000.0));
+                    builder.setTimestamp(message.getTime());
+                    builder.setSequence(message.getSequenceNo());
                 }
                 else {
                     builder.setFrom(screenName);
                     builder.setTo(chatRoom);
                     builder.setType(message.getMessageType());
                     builder.setData(message.getMessage());
-                    builder.setTimestamp((int)Math.round(message.getTime() / 1000.0));
+                    builder.setTimestamp(message.getTime());
+                    builder.setSequence(message.getSequenceNo());
+                    //builder.setTimestamp((int)message.getTime());
                 }
                 gotContent = true;
                 break;
@@ -381,11 +388,18 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     {
         Log.i(LOG_TAG, "onData:" + data.getContent().toString());
 
+
         ChatMessage content;
         //parse data into Chat Message
         try
         {
             content = ChatMessage.parseFrom(data.getContent().getImmutableArray());
+            //TODO add latency tracking
+            //latency.add(String.valueOf(getNowMilliseconds() - content.getTimestamp()));
+            //for(String a:latency)
+            //{
+            //    Log.v(LOG_TAG, "Latency of Data : " + a);
+            //}
             Log.i("Content:", content.getData());
         }
         catch (InvalidProtocolBufferException ex)
@@ -396,7 +410,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         }
 
         //using 180secs difference
-        if (getNowMilliseconds() - content.getTimestamp() * 1000.0 < 180000.0) {
+        if (getNowMilliseconds() - content.getTimestamp() * 1000.0 < 200000.0) {
             String name = content.getFrom(); //get sender's screenName
             String prefix = data.getName().getPrefix(-2).toUri(); //get sender's prefix
             long sessionNo = Long.parseLong(data.getName().get(-2).toEscapedString());
@@ -459,7 +473,7 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
 
                     //if (mapSequence.compareTo(String.valueOf(sequenceNo)) >= 0)
                     //fix bug if sequence reaches 10
-                    if (Long.valueOf(mapSequence) >
+                    if (Long.valueOf(mapSequence) >=
                             sequenceNo)
                     {
 
@@ -474,13 +488,13 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                         Log.i(LOG_TAG, "tmpMap: " + tmpMap.toString());
                 }
             }
+
             if (i >= mSequence.size()) {
                 HashMap<String, String> tmpMap = new HashMap<String, String>();
                 tmpMap.put(nameAndSession, String.valueOf(sequenceNo));
                 mSequence.add(tmpMap);
                 Log.i(LOG_TAG, "sequence_ add new item: " + tmpMap);
             }
-
 
             // Set the alive timeout using the Interest timeout mechanism.
             // TODO: Using a "/local/timeout" interest ,is this the best approach?
@@ -502,6 +516,15 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
                     sessionNo != session) {
                 Log.i("Content from...", content.getFrom() + ": " + content.getData());
                 chatMessageList.add(content);
+                latency.add("From: " + content.getFrom() + " - " + content.getData() + "\n| sequence: "
+                        + content.getSequence() + "\n| latency: " +
+                        String.valueOf(getNowMilliseconds()  - content.getTimestamp())
+                        + "\ndetails: " + getNowMilliseconds()  + " - " + content.getTimestamp());
+
+                for (String a:latency)
+                {
+                    Log.i("Latency:", a);
+                }
             }
 
             else if (content.getType().equals(ChatMessage.ChatMessageType.LEAVE)) {
@@ -526,6 +549,19 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
         }
     }
 
+    public final void
+    onTimeout(Interest interest) {
+        System.out.println("Timeout waiting for chat data: " + interest.toUri());
+        try {
+            face.expressInterest(interest, this, this);
+        }
+        catch(IOException e)
+        {
+            Log.e(LOG_TAG, e.toString());
+        }
+    }
+
+
     private static class RegisterFailed implements OnRegisterFailed {
         public final void
         onRegisterFailed(Name prefix)
@@ -548,7 +584,6 @@ public class DChronoChat implements ChronoSync2013.OnInitialized, ChronoSync2013
     private static class ChatTimeout implements OnTimeout {
         public final void
         onTimeout(Interest interest) {
-
             System.out.println("Timeout waiting for chat data");
         }
 

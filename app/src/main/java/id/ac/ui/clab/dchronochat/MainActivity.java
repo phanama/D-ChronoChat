@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity
                     }
                     else if (isIPValid(mRouterIP))
                     {
-                        String faceUri = "tcp://" + mRouterIP;
+                        String faceUri = "udp://" + mRouterIP;
                         Name globalPrefix = new Name("/ndn/");
                         createRoute(globalPrefix, faceUri);
                         // During initial setup, plug in the details fragment.

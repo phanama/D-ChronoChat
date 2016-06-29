@@ -15,5 +15,6 @@ message ChatMessage {
   }
   required ChatMessageType type = 3 [default = CHAT];
   optional string data = 4;
-  required int32 timestamp = 5;
+  required int64 timestamp = 5;
+  required int64 sequence = 6;
 }

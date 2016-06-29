@@ -19,7 +19,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatHolder> {
     private final Context context;
     private LayoutInflater inflater;
     private List<ChatbufProto.ChatMessage> mMessageList;
-    private Set<String> onlineNow = new HashSet<String>();
 
     public ChatAdapter(Context context, List<ChatbufProto.ChatMessage> messageList) {
         this.context = context;
@@ -32,7 +31,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatHolder> {
         LayoutInflater inflater = LayoutInflater.from(context);
         View chatView = inflater.inflate(R.layout.list_item_chat, parent, false);
         ChatHolder chatHolder = new ChatHolder(chatView);
-
         return chatHolder;
     }
 

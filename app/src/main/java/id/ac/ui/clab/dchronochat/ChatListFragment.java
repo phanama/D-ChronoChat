@@ -33,9 +33,11 @@ import net.named_data.jndn.security.policy.NoVerifyPolicyManager;
 import net.named_data.jndn.util.Blob;
 
 import java.nio.ByteBuffer;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -146,6 +148,7 @@ public class ChatListFragment extends Fragment {
         private View mUserPresence;
         private TextView mScreenName;
         private TextView mChatTime;
+        private TextView mChatLatency;
         private TextView mMessage;
         public ChatbufProto.ChatMessage mChatMessage;
 
@@ -156,13 +159,18 @@ public class ChatListFragment extends Fragment {
             mUserPresence = (View) itemView.findViewById(R.id.user_presence);
             mScreenName = (TextView) itemView.findViewById(R.id.screenName);
             mChatTime = (TextView) itemView.findViewById(R.id.chat_time);
+            //mChatLatency = (TextView) itemView.findViewById(R.id.chat_latency);
             mMessage = (TextView) itemView.findViewById(R.id.chat_message);
         }
 
         public void bindData(ChatbufProto.ChatMessage chatMessage) {
             mChatMessage = chatMessage;
             mScreenName.setText(chatMessage.getFrom());
-            mChatTime.setText(String.valueOf(chatMessage.getTimestamp()));
+            Date date = new Date(chatMessage.getTimestamp());
+            DateFormat formatter = new SimpleDateFormat("dd/mm hh:mm:ss");
+            String dateFormatted = formatter.format(date);
+            mChatTime.setText(dateFormatted);
+            //mChatLatency.setText(String.valueOf((int)Math.round(System.currentTimeMillis()/1000.0) - chatMessage.getTimestamp()) + "ms");
             mMessage.setText(chatMessage.getData());
         }
     }
@@ -270,7 +278,7 @@ public class ChatListFragment extends Fragment {
                         }
                     });
                     // We need to sleep for a few milliseconds so we don't use 100% of the CPU.
-                    Thread.sleep(10);
+                    Thread.sleep(7);
                 }
 
                 // The user entered the command to leave.
@@ -299,15 +307,7 @@ public class ChatListFragment extends Fragment {
 
     }
 
-    private static class RegisterFailed implements OnRegisterFailed {
-        public final void
-        onRegisterFailed(Name prefix)
-        {
-            System.out.println("Register failed for prefix " + prefix.toUri());
-        }
 
-        public final static OnRegisterFailed onRegisterFailed_ = new RegisterFailed();
-    }
 
     private static ByteBuffer
     toBuffer(int[] array)

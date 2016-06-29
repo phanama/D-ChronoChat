@@ -8,10 +8,10 @@ public final class ChatbufProto {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface ChatMessageOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface ChatMessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:id.ac.ui.clab.dchronochat.ChatMessage)
+      com.google.protobuf.MessageOrBuilder {
 
-    // required string to = 1;
     /**
      * <code>required string to = 1;</code>
      */
@@ -26,7 +26,6 @@ public final class ChatbufProto {
     com.google.protobuf.ByteString
         getToBytes();
 
-    // required string from = 2;
     /**
      * <code>required string from = 2;</code>
      */
@@ -41,7 +40,6 @@ public final class ChatbufProto {
     com.google.protobuf.ByteString
         getFromBytes();
 
-    // required .id.ac.ui.clab.dchronochat.ChatMessage.ChatMessageType type = 3 [default = CHAT];
     /**
      * <code>required .id.ac.ui.clab.dchronochat.ChatMessage.ChatMessageType type = 3 [default = CHAT];</code>
      */
@@ -51,7 +49,6 @@ public final class ChatbufProto {
      */
     id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage.ChatMessageType getType();
 
-    // optional string data = 4;
     /**
      * <code>optional string data = 4;</code>
      */
@@ -66,22 +63,31 @@ public final class ChatbufProto {
     com.google.protobuf.ByteString
         getDataBytes();
 
-    // required int32 timestamp = 5;
     /**
-     * <code>required int32 timestamp = 5;</code>
+     * <code>required int64 timestamp = 5;</code>
      */
     boolean hasTimestamp();
     /**
-     * <code>required int32 timestamp = 5;</code>
+     * <code>required int64 timestamp = 5;</code>
      */
-    int getTimestamp();
+    long getTimestamp();
+
+    /**
+     * <code>required int64 sequence = 6;</code>
+     */
+    boolean hasSequence();
+    /**
+     * <code>required int64 sequence = 6;</code>
+     */
+    long getSequence();
   }
   /**
    * Protobuf type {@code id.ac.ui.clab.dchronochat.ChatMessage}
    */
   public static final class ChatMessage extends
-      com.google.protobuf.GeneratedMessage
-      implements ChatMessageOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:id.ac.ui.clab.dchronochat.ChatMessage)
+      ChatMessageOrBuilder {
     // Use ChatMessage.newBuilder() to construct.
     private ChatMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -128,13 +134,15 @@ public final class ChatbufProto {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              to_ = input.readBytes();
+              to_ = bs;
               break;
             }
             case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              from_ = input.readBytes();
+              from_ = bs;
               break;
             }
             case 24: {
@@ -149,13 +157,19 @@ public final class ChatbufProto {
               break;
             }
             case 34: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000008;
-              data_ = input.readBytes();
+              data_ = bs;
               break;
             }
             case 40: {
               bitField0_ |= 0x00000010;
-              timestamp_ = input.readInt32();
+              timestamp_ = input.readInt64();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              sequence_ = input.readInt64();
               break;
             }
           }
@@ -307,7 +321,6 @@ public final class ChatbufProto {
     }
 
     private int bitField0_;
-    // required string to = 1;
     public static final int TO_FIELD_NUMBER = 1;
     private java.lang.Object to_;
     /**
@@ -350,7 +363,6 @@ public final class ChatbufProto {
       }
     }
 
-    // required string from = 2;
     public static final int FROM_FIELD_NUMBER = 2;
     private java.lang.Object from_;
     /**
@@ -393,7 +405,6 @@ public final class ChatbufProto {
       }
     }
 
-    // required .id.ac.ui.clab.dchronochat.ChatMessage.ChatMessageType type = 3 [default = CHAT];
     public static final int TYPE_FIELD_NUMBER = 3;
     private id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage.ChatMessageType type_;
     /**
@@ -409,7 +420,6 @@ public final class ChatbufProto {
       return type_;
     }
 
-    // optional string data = 4;
     public static final int DATA_FIELD_NUMBER = 4;
     private java.lang.Object data_;
     /**
@@ -452,20 +462,34 @@ public final class ChatbufProto {
       }
     }
 
-    // required int32 timestamp = 5;
     public static final int TIMESTAMP_FIELD_NUMBER = 5;
-    private int timestamp_;
+    private long timestamp_;
     /**
-     * <code>required int32 timestamp = 5;</code>
+     * <code>required int64 timestamp = 5;</code>
      */
     public boolean hasTimestamp() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>required int32 timestamp = 5;</code>
+     * <code>required int64 timestamp = 5;</code>
      */
-    public int getTimestamp() {
+    public long getTimestamp() {
       return timestamp_;
+    }
+
+    public static final int SEQUENCE_FIELD_NUMBER = 6;
+    private long sequence_;
+    /**
+     * <code>required int64 sequence = 6;</code>
+     */
+    public boolean hasSequence() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>required int64 sequence = 6;</code>
+     */
+    public long getSequence() {
+      return sequence_;
     }
 
     private void initFields() {
@@ -473,12 +497,14 @@ public final class ChatbufProto {
       from_ = "";
       type_ = id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage.ChatMessageType.CHAT;
       data_ = "";
-      timestamp_ = 0;
+      timestamp_ = 0L;
+      sequence_ = 0L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (!hasTo()) {
         memoizedIsInitialized = 0;
@@ -493,6 +519,10 @@ public final class ChatbufProto {
         return false;
       }
       if (!hasTimestamp()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSequence()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -516,7 +546,10 @@ public final class ChatbufProto {
         output.writeBytes(4, getDataBytes());
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeInt32(5, timestamp_);
+        output.writeInt64(5, timestamp_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeInt64(6, sequence_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -545,7 +578,11 @@ public final class ChatbufProto {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(5, timestamp_);
+          .computeInt64Size(5, timestamp_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(6, sequence_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -629,8 +666,9 @@ public final class ChatbufProto {
      * Protobuf type {@code id.ac.ui.clab.dchronochat.ChatMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessageOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:id.ac.ui.clab.dchronochat.ChatMessage)
+        id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return id.ac.ui.clab.dchronochat.ChatbufProto.internal_static_id_ac_ui_clab_dchronochat_ChatMessage_descriptor;
@@ -671,8 +709,10 @@ public final class ChatbufProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         data_ = "";
         bitField0_ = (bitField0_ & ~0x00000008);
-        timestamp_ = 0;
+        timestamp_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000010);
+        sequence_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -721,6 +761,10 @@ public final class ChatbufProto {
           to_bitField0_ |= 0x00000010;
         }
         result.timestamp_ = timestamp_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.sequence_ = sequence_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -758,6 +802,9 @@ public final class ChatbufProto {
         if (other.hasTimestamp()) {
           setTimestamp(other.getTimestamp());
         }
+        if (other.hasSequence()) {
+          setSequence(other.getSequence());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -776,6 +823,10 @@ public final class ChatbufProto {
           return false;
         }
         if (!hasTimestamp()) {
+          
+          return false;
+        }
+        if (!hasSequence()) {
           
           return false;
         }
@@ -801,7 +852,6 @@ public final class ChatbufProto {
       }
       private int bitField0_;
 
-      // required string to = 1;
       private java.lang.Object to_ = "";
       /**
        * <code>required string to = 1;</code>
@@ -815,9 +865,12 @@ public final class ChatbufProto {
       public java.lang.String getTo() {
         java.lang.Object ref = to_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          to_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            to_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -875,7 +928,6 @@ public final class ChatbufProto {
         return this;
       }
 
-      // required string from = 2;
       private java.lang.Object from_ = "";
       /**
        * <code>required string from = 2;</code>
@@ -889,9 +941,12 @@ public final class ChatbufProto {
       public java.lang.String getFrom() {
         java.lang.Object ref = from_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          from_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            from_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -949,7 +1004,6 @@ public final class ChatbufProto {
         return this;
       }
 
-      // required .id.ac.ui.clab.dchronochat.ChatMessage.ChatMessageType type = 3 [default = CHAT];
       private id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage.ChatMessageType type_ = id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage.ChatMessageType.CHAT;
       /**
        * <code>required .id.ac.ui.clab.dchronochat.ChatMessage.ChatMessageType type = 3 [default = CHAT];</code>
@@ -985,7 +1039,6 @@ public final class ChatbufProto {
         return this;
       }
 
-      // optional string data = 4;
       private java.lang.Object data_ = "";
       /**
        * <code>optional string data = 4;</code>
@@ -999,9 +1052,12 @@ public final class ChatbufProto {
       public java.lang.String getData() {
         java.lang.Object ref = data_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          data_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            data_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -1059,35 +1115,66 @@ public final class ChatbufProto {
         return this;
       }
 
-      // required int32 timestamp = 5;
-      private int timestamp_ ;
+      private long timestamp_ ;
       /**
-       * <code>required int32 timestamp = 5;</code>
+       * <code>required int64 timestamp = 5;</code>
        */
       public boolean hasTimestamp() {
         return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>required int32 timestamp = 5;</code>
+       * <code>required int64 timestamp = 5;</code>
        */
-      public int getTimestamp() {
+      public long getTimestamp() {
         return timestamp_;
       }
       /**
-       * <code>required int32 timestamp = 5;</code>
+       * <code>required int64 timestamp = 5;</code>
        */
-      public Builder setTimestamp(int value) {
+      public Builder setTimestamp(long value) {
         bitField0_ |= 0x00000010;
         timestamp_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required int32 timestamp = 5;</code>
+       * <code>required int64 timestamp = 5;</code>
        */
       public Builder clearTimestamp() {
         bitField0_ = (bitField0_ & ~0x00000010);
-        timestamp_ = 0;
+        timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long sequence_ ;
+      /**
+       * <code>required int64 sequence = 6;</code>
+       */
+      public boolean hasSequence() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>required int64 sequence = 6;</code>
+       */
+      public long getSequence() {
+        return sequence_;
+      }
+      /**
+       * <code>required int64 sequence = 6;</code>
+       */
+      public Builder setSequence(long value) {
+        bitField0_ |= 0x00000020;
+        sequence_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int64 sequence = 6;</code>
+       */
+      public Builder clearSequence() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        sequence_ = 0L;
         onChanged();
         return this;
       }
@@ -1103,7 +1190,7 @@ public final class ChatbufProto {
     // @@protoc_insertion_point(class_scope:id.ac.ui.clab.dchronochat.ChatMessage)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_id_ac_ui_clab_dchronochat_ChatMessage_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -1118,31 +1205,32 @@ public final class ChatbufProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\023chatbuf-proto.proto\022\031id.ac.ui.clab.dch" +
-      "ronochat\"\334\001\n\013ChatMessage\022\n\n\002to\030\001 \002(\t\022\014\n\004" +
+      "ronochat\"\356\001\n\013ChatMessage\022\n\n\002to\030\001 \002(\t\022\014\n\004" +
       "from\030\002 \002(\t\022J\n\004type\030\003 \002(\01626.id.ac.ui.clab" +
       ".dchronochat.ChatMessage.ChatMessageType" +
-      ":\004CHAT\022\014\n\004data\030\004 \001(\t\022\021\n\ttimestamp\030\005 \002(\005\"" +
-      "F\n\017ChatMessageType\022\010\n\004CHAT\020\000\022\t\n\005HELLO\020\001\022" +
-      "\t\n\005LEAVE\020\002\022\010\n\004JOIN\020\003\022\t\n\005OTHER\020\004"
+      ":\004CHAT\022\014\n\004data\030\004 \001(\t\022\021\n\ttimestamp\030\005 \002(\003\022" +
+      "\020\n\010sequence\030\006 \002(\003\"F\n\017ChatMessageType\022\010\n\004" +
+      "CHAT\020\000\022\t\n\005HELLO\020\001\022\t\n\005LEAVE\020\002\022\010\n\004JOIN\020\003\022\t" +
+      "\n\005OTHER\020\004"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_id_ac_ui_clab_dchronochat_ChatMessage_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_id_ac_ui_clab_dchronochat_ChatMessage_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_id_ac_ui_clab_dchronochat_ChatMessage_descriptor,
-              new java.lang.String[] { "To", "From", "Type", "Data", "Timestamp", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_id_ac_ui_clab_dchronochat_ChatMessage_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_id_ac_ui_clab_dchronochat_ChatMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_id_ac_ui_clab_dchronochat_ChatMessage_descriptor,
+        new java.lang.String[] { "To", "From", "Type", "Data", "Timestamp", "Sequence", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

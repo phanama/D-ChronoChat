@@ -36,7 +36,7 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="3dp"
+            android:layout_height="10dp"
             android:layout_above="@+id/msg_box"
             android:background="@drawable/light_fade_up"
             />

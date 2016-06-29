@@ -8,7 +8,7 @@ import id.ac.ui.clab.dchronochat.ChatbufProto.ChatMessage;
 
 public class CachedMessage {
     public CachedMessage
-            (long sequenceNo, ChatMessage.ChatMessageType messageType, String message, double time)
+            (long sequenceNo, ChatMessage.ChatMessageType messageType, String message, long time)
     {
         sequenceNo_ = sequenceNo;
         messageType_ = messageType;
@@ -25,11 +25,11 @@ public class CachedMessage {
     public final String
     getMessage() { return message_; }
 
-    public final double
+    public final long
     getTime() { return time_; }
 
     private final long sequenceNo_;
     private final ChatMessage.ChatMessageType messageType_;
     private final String message_;
-    private final double time_;
+    private final long time_;
 };
